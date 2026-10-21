@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#08111f" />
+    <meta name="description" content="AdsMCP — local-first MCP control plane для рекламных кампаний, конверсий, аналитики и networking." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>AdsMCP — рекламная сеть, которая остаётся под вашим контролем</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="AdsMCP home"><span class="brand-mark"><span></span><span></span><span></span></span><span>Ads<span class="brand-accent">MCP</span></span></a>
+      <nav class="nav" aria-label="Основная навигация">
+        <a href="#capabilities">Возможности</a><a href="#architecture">Архитектура</a><a href="#network">Сеть</a><a href="#adblock">Adblock</a><a href="#connect">Подключение</a>
+      </nav>
+      <a class="nav-cta" href="#connect">Запустить локально <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse"></span> LOCAL-FIRST ADVERTISING CONTROL PLANE</p>
+          <h1>Рекламная сеть, которая остаётся <em>под вашим контролем.</em></h1>
+          <p class="hero-lead">AdsMCP подключает рекламные кабинеты, сайты и CRM к AI-агенту. Кампании и ключи остаются локально, а сеть синхронизирует только то, что вы разрешили.</p>
+          <div class="hero-actions"><a class="button button-primary" href="#connect">Подключить AdsMCP <span aria-hidden="true">↗</span></a><a class="button button-quiet" href="#architecture">Как это устроено <span aria-hidden="true">↓</span></a></div>
+          <div class="hero-trust"><span><b>01</b> SQLite-память</span><span><b>02</b> opt-in sync</span><span><b>03</b> без ключей в облаке</span></div>
+        </div>
+        <div class="hero-console" aria-label="Пример локального AdsMCP">
+          <div class="console-top"><span class="window-dots"><i></i><i></i><i></i></span><span>ads-mcp / local session</span><span class="console-status">● online</span></div>
+          <div class="console-body">
+            <p class="console-comment">// ask your agent</p>
+            <p><span class="syntax-purple">ads_campaign_analytics</span> <span class="syntax-muted">{</span></p>
+            <p class="indent"><span class="syntax-key">campaign_id</span><span class="syntax-muted">:</span> <span class="syntax-green">"q4-launch"</span><span class="syntax-muted">,</span></p>
+            <p class="indent"><span class="syntax-key">from</span><span class="syntax-muted">:</span> <span class="syntax-green">"2026-10-01"</span><span class="syntax-muted">,</span></p>
+            <p class="indent"><span class="syntax-key">to</span><span class="syntax-muted">:</span> <span class="syntax-green">"2026-10-31"</span></p>
+            <p><span class="syntax-muted">}</span></p>
+            <div class="console-divider"></div><p><span class="syntax-comment">// result · local SQLite</span></p>
+            <div class="result-grid"><div><small>ROAS</small><strong>4.82×</strong></div><div><small>CPA</small><strong>$12.40</strong></div><div><small>CONVERSIONS</small><strong>318</strong></div></div>
+            <div class="console-footer"><span class="check">✓</span> no credentials left this machine</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="signal-strip"><div class="section-shell signal-grid"><div><span class="signal-number">01</span><strong>Observe</strong><span>собирайте события и расходы</span></div><div><span class="signal-number">02</span><strong>Understand</strong><span>считайте attribution и ROAS</span></div><div><span class="signal-number">03</span><strong>Act</strong><span>автоматизируйте только разрешённое</span></div></div></section>
+
+      <section id="capabilities" class="section-shell section-pad">
+        <div class="section-heading"><p class="eyebrow">ONE CONTROL PLANE</p><h2>Вся воронка. Один локальный контур.</h2><p>AdsMCP даёт агенту инструменты, а не чёрный ящик. Вы видите данные, правила и каждое действие.</p></div>
+        <div class="capability-grid">
+          <article class="capability-card"><span class="card-index">01 / CAMPAIGNS</span><h3>Кампании и бюджеты</h3><p>Единая модель кампаний независимо от того, где они запущены. Статусы, лимиты и ручной или автоматический контроль.</p><div class="card-line"><span>draft</span><span>active</span><span>paused</span></div></article>
+          <article class="capability-card accent-card"><span class="card-index">02 / CONVERSIONS</span><h3>Конверсии без потерь</h3><p>Server-side события, дедупликация и агрегаты. Стабильный dedupe key делает повторную отправку безопасной.</p><div class="event-flow"><span>click</span><b>→</b><span>lead</span><b>→</b><span class="event-hot">sale</span></div></article>
+          <article class="capability-card"><span class="card-index">03 / ANALYTICS</span><h3>Метрики, которым можно доверять</h3><p>CTR, CPC, CPA, conversion rate и ROAS считаются из локальных данных, а не из непроверяемого отчёта.</p><div class="mini-chart"><span style="height:35%"></span><span style="height:52%"></span><span style="height:47%"></span><span style="height:73%"></span><span style="height:66%"></span><span style="height:91%"></span></div></article>
+          <article class="capability-card"><span class="card-index">04 / AUTOMATION</span><h3>Сначала dry-run</h3><p>Правило сначала показывает решение, потом действует в заданных границах. Pause, budget guardrails и audit trail.</p><div class="rule-chip"><span class="rule-dot"></span> ROAS &lt; 1.5 → pause</div></article>
+        </div>
+      </section>
+
+      <section id="architecture" class="architecture-section section-pad"><div class="section-shell">
+        <div class="section-heading split-heading"><div><p class="eyebrow">LOCAL FIRST / OPTIONAL NETWORK</p><h2>Локальные действия.<br /><em>Сетевая координация.</em></h2></div><p>Relay не владеет рекламными кабинетами и не получает API-ключи. Он нужен для discovery, networking и той синхронизации, которую вы включили сами.</p></div>
+        <div class="architecture-map">
+          <div class="arch-node local-node"><div class="node-label"><span class="node-dot local-dot"></span> LOCAL NODE</div><h3>AdsMCP</h3><p>Ключи, кампании, raw events и реальные действия остаются здесь.</p><ul><li>Google / Meta / VK / Yandex</li><li>CRM и сайты</li><li>SQLite + automation</li></ul></div>
+          <div class="arch-bridge"><span>opt-in</span><i></i><i></i><i></i><span>sync</span></div>
+          <div class="arch-node relay-node"><div class="node-label"><span class="node-dot relay-dot"></span> NETWORK RELAY</div><h3>ads.skynes.net/api</h3><p>Каталог платформ, рекламных мест, профилей и обезличенных агрегатов.</p><ul><li>platform registry</li><li>placement offers</li><li>networking profiles</li></ul></div>
+        </div>
+      </div></section>
+
+      <section id="network" class="section-shell section-pad network-section"><div class="network-copy"><p class="eyebrow">ADS NETWORK / PARTICIPATE ON YOUR TERMS</p><h2>Новые площадки появляются там, где их замечают.</h2><p>Сообщайте о новых рекламных платформах, публикуйте свои рекламные места и находите партнёров. Публикация opt-in: локальный узел решает, что отправлять в сеть.</p><div class="network-actions"><a class="button button-primary" href="#connect">Опубликовать площадку <span aria-hidden="true">↗</span></a><a class="text-link" href="#privacy">Принципы приватности <span aria-hidden="true">↗</span></a></div></div>
+        <div class="inventory-card"><div class="inventory-head"><span>LIVE INVENTORY</span><span class="inventory-live"><i></i> opt-in network</span></div><div class="inventory-row"><div class="inventory-icon icon-blue">N</div><div><strong>Northstar newsletter</strong><small>newsletter · global · native</small></div><b>CPM <em>$5</em></b></div><div class="inventory-row"><div class="inventory-icon icon-pink">⌁</div><div><strong>Product builders / TG</strong><small>telegram · RU / EU · post</small></div><b>CPC <em>$0.42</em></b></div><div class="inventory-row"><div class="inventory-icon icon-green">◈</div><div><strong>Indie SaaS directory</strong><small>website · US · banner</small></div><b>CPA <em>$18</em></b></div><div class="inventory-foot">Only verified offers are visible by default <span>↗</span></div></div>
+      </section>
+
+      <section id="adblock" class="adblock-section section-pad"><div class="section-shell">
+        <div class="adblock-heading"><div class="section-heading"><p class="eyebrow">ADBLOCK / VISIBILITY BOUNDARY</p><h2>Что блокировщик<br /><em>не остановит.</em></h2><p>Adblock убирает баннеры, всплывающие окна и часть рекламных скриптов. Но он не отличает полезный контекст от рекламы, если рекомендация встроена в сам материал или приходит из того же источника, что и основной контент.</p></div><div class="adblock-status"><span class="status-icon">✓</span><div><strong>Формат меняется</strong><p>Меньше прерываний. Больше доверия и пользы.</p></div></div></div>
+        <div class="adblock-grid">
+          <article class="adblock-card"><span class="card-index">01 / NATIVE</span><h3>Нативная реклама</h3><p>Спонсорские статьи, интеграции и рекомендации, которые становятся частью текста или структуры сайта.</p><a class="source-link" href="https://uanews.kharkiv.ua/other/2025/03/30/473823.html" target="_blank" rel="noopener noreferrer">читать источник ↗</a></article>
+          <article class="adblock-card"><span class="card-index">02 / INFLUENCE</span><h3>Инфлюэнс-маркетинг</h3><p>Обзоры, упоминания и рекомендации от блогеров и лидеров мнений на сторонних платформах или в соцсетях.</p><a class="source-link" href="https://uanews.kharkiv.ua/other/2025/03/30/473823.html" target="_blank" rel="noopener noreferrer">читать источник ↗</a></article>
+          <article class="adblock-card"><span class="card-index">03 / ACCEPTABLE ADS</span><h3>Приемлемая реклама</h3><p>Некоторые блокировщики по умолчанию пропускают ненавязчивые текстовые баннеры из белого списка.</p><a class="source-link" href="https://wiki.iphoster.net/wiki/%D0%A1%D0%BF%D0%B8%D1%81%D0%BE%D0%BA_%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D1%89%D0%B8%D0%BA%D0%BE%D0%B2_%D1%80%D0%B5%D0%BA%D0%BB%D0%B0%D0%BC%D1%8B_-_2026" target="_blank" rel="noopener noreferrer">читать источник ↗</a></article>
+          <article class="adblock-card"><span class="card-index">04 / PLATFORM</span><h3>Внутри платформ</h3><p>Спонсорские посты в лентах Telegram и VK, если они подгружаются с тех же серверов, что и обычные сообщения.</p><span class="source-note">контекст = часть продукта</span></article>
+        </div>
+        <div class="adblock-future"><div><p class="eyebrow">THE NEXT FORMAT</p><h3>Будущее — за полезными материалами, которые клиент может найти сам.</h3><p>Компания — через <a href="https://workix.co/" target="_blank" rel="noopener noreferrer">Workix</a>. Информация о продукте или технологии — через <a href="https://aiki.wiki/" target="_blank" rel="noopener noreferrer">Aiki</a>. Такой материал не прерывает путь пользователя, а помогает ему принять решение. Поэтому <a href="https://ads.skynes.net/" target="_blank" rel="noopener noreferrer">ads.skynes.net</a> может стать хорошей базой для взаимного продвижения.</p></div><div class="future-links"><a href="https://workix.co/" target="_blank" rel="noopener noreferrer"><strong>workix.co</strong><small>компания и сервисы <span>↗</span></small></a><a href="https://aiki.wiki/" target="_blank" rel="noopener noreferrer"><strong>aiki.wiki</strong><small>продукты и технологии <span>↗</span></small></a></div></div>
+      </div></section>
+
+      <section id="connect" class="connect-section section-pad"><div class="section-shell connect-grid"><div><p class="eyebrow">START WITH ONE NODE</p><h2>Подключите агента<br /><em>за несколько минут.</em></h2><p>Локальный MCP работает сам по себе. Relay подключается только если вы укажете его URL.</p></div><div class="install-card"><div class="code-top"><span>PowerShell</span><button class="copy-button" type="button" data-copy="npm install && npm run build">Copy</button></div><pre><code><span class="code-dim"># local AdsMCP</span>
+npm install
+npm run build
+
+<span class="code-dim"># optional network relay</span>
+<span class="code-key">ADS_NETWORK_URL</span>=https://ads.skynes.net/api</code></pre><div class="install-foot"><span class="check">✓</span> local actions stay local</div></div></div></section>
+
+      <section id="privacy" class="privacy-section section-shell"><div class="privacy-pill"><span class="privacy-symbol">⌁</span><div><strong>Принцип по умолчанию</strong><p>Никаких ключей, raw events или скрытых удалённых действий. Синхронизация начинается только после opt-in.</p></div></div></section>
+    </main>
+
+    <footer class="site-footer section-shell"><a class="brand" href="#top"><span class="brand-mark"><span></span><span></span><span></span></span><span>Ads<span class="brand-accent">MCP</span></span></a><span class="footer-copy">Local-first advertising automation · <span id="year"></span></span><a class="footer-api" href="/api/health">API health <span aria-hidden="true">↗</span></a></footer>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

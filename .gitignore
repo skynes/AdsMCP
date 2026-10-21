@@ -1,0 +1,115 @@
+# --- Dependencies ---
+node_modules/
+
+# --- Build output (MCP) ---
+# Note: build/ is the static site source used by .openai/hosting.json, so it stays tracked.
+dist/
+*.tsbuildinfo
+
+# --- Private local landing page ---
+# The landing is maintained locally for preview and must not be published with
+# the MCP repository.
+landing/
+
+# --- Packaged site archives (generated from build/) ---
+*.tar.gz
+*.zip
+
+# --- Local runtime data ---
+# The default ADS_MCP_DATA root. Custom roots should live outside the repository
+# or be added here explicitly before they receive credentials or provider state.
+data/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Client workspaces and installation-specific reports are not source examples.
+/projects/
+/docs/ADS-EFFICIENCY-*.md
+
+# One-off local operations contain real recipients, drafts, and account IDs.
+# Keep reusable utilities in scripts/ and new private operations in scripts/local/.
+/scripts/local/
+/scripts/fix-mastodon-reply-languages.ts
+/scripts/follow-today-mastodon-authors.ts
+/scripts/leave-telegram-topic-chats.mjs
+/scripts/prepare-high-score-batch.ts
+/scripts/prepare-mastodon-interest-replies.ts
+/scripts/prepare-mastodon-reply-candidates.ts
+/scripts/prepare-next-client-batch.ts
+/scripts/prepare-purchaser-priority-batch.ts
+/scripts/publish-mastodon-question-posts.ts
+/scripts/send-mastodon-interest-replies.ts
+/scripts/update-client-draft-variants.ts
+
+# --- Secrets and local config ---
+.env
+.env.*
+!.env.example
+*.env
+*.token
+*.session
+*.session-journal
+*.session-shm
+*.session-wal
+cookies*.json
+*storage-state*.json
+secrets/
+*.pem
+*.p8
+*.key
+service-account*.json
+google-ads.yaml
+*.p12
+*.pfx
+client_secret*.json
+credentials*.json
+mcp.local.json
+.npmrc
+*.har
+/.local/
+
+# --- Relay server (separate repository, nested .git) ---
+server/
+
+# --- Provider MCP modules ---
+# modules/modules.example.json (and modules/README.md) stay tracked;
+# the local manifest and every module checkout are ignored.
+modules/modules.json
+modules/*/
+
+# --- Legacy root-level provider installs, venvs and browser profiles ---
+.venv*/
+venv/
+env/
+.telegram-ads-*/
+.google-ads-mcp*/
+.yandex-mcp-*/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Test coverage ---
+coverage/
+
+# --- Editors and OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,77 @@
+{
+  "name": "@skynes/ads-mcp",
+  "version": "0.1.0",
+  "description": "Local MCP server for advertising campaign operations, conversion analytics and automation.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ads-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "branding",
+    "docs/FREE-USE-RULES.md",
+    "README.md",
+    ".env.example",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run build:mcp",
+    "build:all": "npm run build:mcp && npm run build:server",
+    "build:mcp": "tsc -p tsconfig.json",
+    "build:server": "tsc -p server/tsconfig.json",
+    "typecheck": "npm run typecheck:mcp",
+    "typecheck:all": "npm run typecheck:mcp && npm run typecheck:server",
+    "typecheck:mcp": "tsc -p tsconfig.json --noEmit",
+    "typecheck:server": "tsc -p server/tsconfig.json --noEmit",
+    "dev": "tsx src/index.ts",
+    "preview:landing": "node scripts/serve-landing.mjs",
+    "dev:server": "tsx server/src/index.ts",
+    "dashboard": "tsx scripts/start-settings-dashboard.ts",
+    "start": "node dist/index.js",
+    "start:server": "node server/dist/index.js",
+    "telegram:login": "node scripts/telegram-ads-login.mjs",
+    "telegram:account:login": "node scripts/telegram-account-login.mjs",
+    "telegram:learn-search": "npm run build:mcp && node scripts/learn-telegram-search.mjs --apply",
+    "telegram:sync:unread": "npm run build:mcp && node scripts/sync-unread-telegram.mjs",
+    "telegram:sync:public-replies": "npm run build:mcp && node scripts/sync-telegram-public-replies.mjs",
+    "check:publication": "node scripts/check-publication.mjs --history",
+    "smoke": "npm run build && node scripts/smoke.mjs && node scripts/smoke-free-use.mjs && node scripts/smoke-settings.mjs",
+    "smoke:free-use": "npm run build:mcp && node scripts/smoke-free-use.mjs",
+    "smoke:dstore": "npm run build:mcp && node scripts/smoke-dstore.mjs",
+    "smoke:aiki": "npm run build:mcp && node scripts/smoke-aiki.mjs",
+    "smoke:weekly-contribution": "npm run build:mcp && node scripts/smoke-weekly-contribution.mjs",
+    "smoke:network": "npm run build:all && node scripts/smoke-network.mjs"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "keywords": [
+    "mcp",
+    "advertising",
+    "campaigns",
+    "conversions",
+    "analytics",
+    "automation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dotenv": "^17.4.2",
+    "qrcode": "^1.5.4",
+    "zod": "^3.25.76"
+  },
+  "optionalDependencies": {
+    "prebuilt-tdlib": "^0.1008066.0",
+    "tdl": "^8.1.0",
+    "telegram": "^2.26.22",
+    "teleproto": "^1.229.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "@types/qrcode": "^1.5.6",
+    "tsx": "^4.16.5",
+    "typescript": "^5.5.4"
+  }
+}
