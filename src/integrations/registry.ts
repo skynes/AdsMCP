@@ -1,4 +1,5 @@
 import type { IntegrationAdapterInfo, IntegrationAdapterPlan } from "./contracts.js";
+import { getCapabilityProfile } from "./capability-profile.js";
 import { listConfiguredModules } from "./mcp-modules.js";
 import { mastodonCredentialsConfigured } from "../mastodon/client.js";
 
@@ -48,17 +49,18 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
   {
     provider: "meta_ads",
     label: "Meta Ads",
-    mode: "api",
+    mode: "mcp_module",
     intro: "Социальная реклама Facebook и Instagram: интересы, похожие аудитории, ретаргетинг и визуальные креативы.",
     audiences: ["широкая социальная аудитория", "интересы", "lookalike", "ретаргетинг"],
     bestFor: ["визуальное привлечение", "ретаргетинг", "лидогенерация", "масштабирование спроса"],
     setupLevel: "high",
-    capabilities: ["campaigns.read", "metrics.read", "campaigns.write"],
-    secretEnv: ["ADS_META_ACCESS_TOKEN", "ADS_META_AD_ACCOUNT_ID", "ADS_META_API_VERSION"],
-    optionalEnv: ["ADS_META_API_BASE_URL"],
-    implementation: "plan",
-    writePolicy: "guarded_api",
-    notes: "Graph API adapter; account and API version are explicit environment settings.",
+    capabilities: ["accounts.read", "campaigns.read", "ad_groups.read", "ads.read", "creatives.read", "audiences.read", "targeting.read", "metrics.read", "reports.read", "pixels.read", "pages.read", "catalogs.read"],
+    secretEnv: ["META_ACCESS_TOKEN"],
+    optionalEnv: ["META_ENABLE_WRITES", "META_API_VERSION"],
+    moduleIds: ["meta_ads"],
+    implementation: "module",
+    writePolicy: "manual_only",
+    notes: "Use @getmcpads/meta-ads-mcp-server v2.0.1 against the official Meta Graph/Marketing API. All 41 read tools are allowlisted; the package's 23 writes stay disabled by META_ENABLE_WRITES=0 and are not exposed to AdsMCP.",
   },
   {
     provider: "openai_ads",
@@ -77,30 +79,34 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
   {
     provider: "spotify_ads",
     label: "Spotify Ads",
-    mode: "api",
-    intro: "Планируемый аудио- и video-first канал Spotify для охвата, контекстных интересов и brand consideration.",
+    mode: "mcp_module",
+    intro: "Аудио- и video-first канал Spotify для охвата, контекстных интересов и brand consideration.",
     audiences: ["слушатели музыки и подкастов", "аудио-аудитория", "mobile-first пользователи", "контекстные интересы"],
     bestFor: ["brand awareness", "аудио-продукты", "подкасты и creators", "охват верхнего уровня воронки"],
     setupLevel: "high",
-    capabilities: ["campaigns.read", "metrics.read", "audiences.read"],
+    capabilities: ["accounts.read", "campaigns.read", "ad_groups.read", "ads.read", "metrics.read", "reports.read", "targeting.read", "creatives.read"],
     secretEnv: [],
-    implementation: "plan",
+    optionalEnv: ["ADPORT_HOME"],
+    moduleIds: ["spotify_ads"],
+    implementation: "module",
     writePolicy: "manual_only",
-    notes: "Planned Spotify Ads adapter. Confirm regional availability, API access, reporting model and creative workflow before implementation.",
+    notes: "Use local Adport v0.6.1: its Spotify provider talks directly to the official Spotify Ads API and stores BYO credentials locally. AdsMCP exposes only accounts/reporting/recommendation reads; provider writes remain outside the allowlist until a separate approval.",
   },
   {
     provider: "x_ads",
     label: "X Ads",
-    mode: "api",
-    intro: "Планируемый канал X для real-time обсуждений, интересов и контекстного спроса вокруг событий и тем.",
+    mode: "mcp_module",
+    intro: "Канал X для real-time обсуждений, интересов и контекстного спроса вокруг событий и тем.",
     audiences: ["real-time communities", "технологические и business-аудитории", "подписчики тем", "event-driven спрос"],
     bestFor: ["launch и announcements", "developer-аудитория", "контекстные кампании", "conversation-led demand"],
     setupLevel: "high",
-    capabilities: ["campaigns.read", "metrics.read", "audiences.read"],
-    secretEnv: [],
-    implementation: "plan",
+    capabilities: ["accounts.read", "campaigns.read", "ad_groups.read", "ads.read", "funding.read", "targeting.read", "creatives.read", "pixels.read", "metrics.read", "reports.read"],
+    secretEnv: ["X_ADS_ACCESS_TOKEN", "X_ADS_ACCOUNT_IDS"],
+    optionalEnv: ["X_ADS_SCOPES", "X_ADS_ENABLE_WRITES"],
+    moduleIds: ["x_ads"],
+    implementation: "module",
     writePolicy: "manual_only",
-    notes: "Planned X Ads adapter. Validate the current API, account eligibility, regional availability and campaign-management permissions before implementation.",
+    notes: "Use the local @getmcpads/x-ads-mcp-server module against the official X Ads API. Read tools only are allowlisted; provider writes stay disabled. The official remote X Ads MCP remains the preferred future path once the bridge supports OAuth2 PKCE and rotating refresh tokens.",
   },
   {
     provider: "telegram_ads",
@@ -203,6 +209,22 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
     notes: "Official Microsoft Advertising MCP is remote and OAuth-based; keep Bing writes manual-only until the local OAuth flow is integrated.",
   },
   {
+    provider: "avito_ads",
+    label: "Avito Ads",
+    mode: "mcp_module",
+    intro: "Медийная и performance-реклама в кабинете Авито Рекламы для российского рынка и аудитории объявлений.",
+    audiences: ["аудитория Авито", "российский рынок", "покупатели товаров и услуг", "performance и brand кампании"],
+    bestFor: ["реклама на Авито", "кампании и группы", "анализ расхода", "агентские аккаунты"],
+    setupLevel: "medium",
+    capabilities: ["accounts.read", "balances.read", "campaigns.read", "ad_groups.read", "creatives.read", "reports.read", "contracts.read", "users.read"],
+    secretEnv: ["AVITO_ADS_CLIENT_ID", "AVITO_ADS_CLIENT_SECRET", "AVITO_ADS_ACCOUNT_ID"],
+    optionalEnv: ["AVITO_ADS_ENVIRONMENT", "AVITO_ADS_TIMEOUT_MS", "AVITO_ADS_MAX_RETRIES", "AVITO_ADS_TOKEN_LEEWAY_SECONDS", "ASKADS_TELEMETRY"],
+    moduleIds: ["avito_ads"],
+    implementation: "module",
+    writePolicy: "manual_only",
+    notes: "A1-x-tech mcp-avito-ads v1.1.0 runs locally over stdio and calls the official Avito Ads API with client_credentials. AdsMCP exposes only account, balance, campaign, group, creative, contract, user and statistics reads; writes, money transfers and raw_request stay outside the allowlist.",
+  },
+  {
     provider: "apple_search_ads",
     label: "Apple Search Ads",
     mode: "mcp_module",
@@ -210,12 +232,13 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
     audiences: ["пользователи iOS", "поиск в App Store", "покупатели приложений", "аудитория категорий приложений"],
     bestFor: ["установки iOS", "рост приложения", "подписочные приложения", "App Store discovery"],
     setupLevel: "high",
-    capabilities: ["apps.read", "campaigns.read", "metrics.read", "keywords.read"],
-    secretEnv: ["ASA_CLIENT_ID", "ASA_TEAM_ID", "ASA_KEY_ID", "ASA_PRIVATE_KEY_PATH", "ASA_ORG_ID"],
+    capabilities: ["accounts.read", "apps.read", "campaigns.read", "ad_groups.read", "ads.read", "creatives.read", "keywords.read", "targeting.read", "metrics.read", "reports.read", "insights.read", "recommendations.read", "audit.read"],
+    secretEnv: ["APPLE_ADS_CLIENT_ID", "APPLE_ADS_TEAM_ID", "APPLE_ADS_KEY_ID", "APPLE_ADS_PRIVATE_KEY_PATH", "APPLE_ADS_AD_ACCOUNT_ID"],
+    optionalEnv: ["APPLE_ADS_PROFILE", "APPLE_ADS_MCP_CONFIG", "APPLE_ADS_ALLOW_WRITES", "APPLE_ADS_ALLOW_DELETES"],
     moduleIds: ["apple_search_ads"],
     implementation: "module",
     writePolicy: "manual_only",
-    notes: "Apple Ads API module covers App Store campaign discovery and reports; mutation tools remain outside the allowlist.",
+    notes: "Use zelentsov-dev/apple-ads-mcp release v0.3.7 for the official Apple Ads Platform API v1. All 57 read tools are allowlisted; the module's mutation/preview tools stay outside AdsMCP and both write gates are false.",
   },
   {
     provider: "tiktok_ads",
@@ -225,12 +248,13 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
     audiences: ["молодая аудитория", "интересы и discovery", "creator и entertainment", "mobile-first пользователи"],
     bestFor: ["видеопривлечение", "узнаваемость", "тестирование креативов", "масштабирование mobile-продуктов"],
     setupLevel: "high",
-    capabilities: ["campaigns.read", "metrics.read", "audiences.read", "pixels.read"],
-    secretEnv: ["TIKTOK_APP_ID", "TIKTOK_APP_SECRET"],
+    capabilities: ["accounts.read", "campaigns.read", "ad_groups.read", "ads.read", "creatives.read", "audiences.read", "targeting.read", "metrics.read", "reports.read", "pixels.read", "catalogs.read", "events.read"],
+    secretEnv: ["TIKTOK_ACCESS_TOKEN", "TIKTOK_APP_ID", "TIKTOK_APP_SECRET"],
+    optionalEnv: ["TIKTOK_ADVERTISER_ID", "TIKTOK_BC_ID", "TIKTOK_ENABLE_WRITES", "LOG_LEVEL"],
     moduleIds: ["tiktok_ads"],
     implementation: "module",
     writePolicy: "manual_only",
-    notes: "Local TikTok MCP uses OAuth login tools and exposes read-only campaign, performance, audience and pixel data.",
+    notes: "Use @getmcpads/tiktok-ads-mcp-server v2.0.1 against the TikTok Business API. All 35 read tools are allowlisted; the package's 29 writes stay disabled by TIKTOK_ENABLE_WRITES=0 and are not exposed to AdsMCP.",
   },
   {
     provider: "reddit_ads",
@@ -240,13 +264,43 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
     audiences: ["технологические сообщества", "gaming", "нишевые subreddit-ы", "обсуждающий и исследующий спрос"],
     bestFor: ["community-продукты", "техническая аудитория", "B2B и developer-аудитория", "trust-led consideration"],
     setupLevel: "medium",
-    capabilities: ["accounts.read", "campaigns.read", "metrics.read"],
+    capabilities: ["accounts.read", "campaigns.read", "ad_groups.read", "ads.read", "creatives.read", "metrics.read", "reports.read", "targeting.read"],
     secretEnv: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "REDDIT_REFRESH_TOKEN"],
-    optionalEnv: ["REDDIT_USER_AGENT"],
+    optionalEnv: ["REDDIT_ADS_ACCOUNT_ID", "REDDIT_ADS_WRITE_TIER"],
     moduleIds: ["reddit_ads"],
     implementation: "module",
     writePolicy: "manual_only",
-    notes: "Reddit Ads API v3 MCP provides account hierarchy and reports; creative and management tools remain disabled by default.",
+    notes: "Pinned camlowe/mcp-server-reddit-ads v0.5.5 uses the official Reddit Ads API v3. AdsMCP forces read tier and allowlists only account, entity, creative-read, targeting-read and report tools.",
+  },
+  {
+    provider: "email",
+    label: "Email / SMTP + IMAP",
+    mode: "mcp_module",
+    intro: "Подключение почтового ящика для проверки входящих писем через IMAP и отправки сообщений через SMTP.",
+    audiences: ["рабочая почта", "поддержка и операции", "уведомления", "проверка кодов и входящих писем"],
+    bestFor: ["чтение и поиск писем", "отправка ответов", "подготовка черновиков", "проверка соединения почты"],
+    setupLevel: "medium",
+    capabilities: ["accounts.read", "mailboxes.read", "messages.read", "messages.search", "attachments.read", "messages.write", "drafts.write"],
+    secretEnv: ["MCP_EMAIL_ADDRESS", "MCP_EMAIL_PASSWORD", "MCP_EMAIL_IMAP_HOST", "MCP_EMAIL_SMTP_HOST"],
+    optionalEnv: [
+      "MCP_EMAIL_ACCOUNT_NAME",
+      "MCP_EMAIL_FULL_NAME",
+      "MCP_EMAIL_USERNAME",
+      "MCP_EMAIL_IMAP_PORT",
+      "MCP_EMAIL_IMAP_TLS",
+      "MCP_EMAIL_SMTP_PORT",
+      "MCP_EMAIL_SMTP_TLS",
+      "MCP_EMAIL_SMTP_STARTTLS",
+      "MCP_EMAIL_SMTP_VERIFY_SSL",
+      "MCP_EMAIL_RATE_LIMIT",
+      "MCP_EMAIL_SEND_SAVE_TO_SENT",
+      "MCP_EMAIL_READ_ONLY",
+      "EMAIL_ACCOUNTS",
+    ],
+    moduleIds: ["email"],
+    implementation: "module",
+    writePolicy: "manual_only",
+    notes: "Pinned @codefuturist/email-mcp v0.6.0 (Node.js >=24). IMAP read/search and SMTP send/reply/forward/draft tools are allowlisted; delete, bulk, mailbox/label mutations, scheduling and notification tools stay disabled. MCP_EMAIL_READ_ONLY=true is an additional send kill-switch.",
   },
   {
     provider: "crm",
@@ -283,6 +337,7 @@ export function listAdapterInfo(): Array<IntegrationAdapterInfo & { configured: 
   const modules = listConfiguredModules();
   return ADAPTERS.map((adapter) => ({
     ...adapter,
+    ...getCapabilityProfile(adapter.provider),
     configured:
       (adapter.provider === "mastodon"
         ? mastodonCredentialsConfigured()
@@ -293,7 +348,8 @@ export function listAdapterInfo(): Array<IntegrationAdapterInfo & { configured: 
 }
 
 export function getAdapterInfo(provider: string): IntegrationAdapterInfo | undefined {
-  return ADAPTERS.find((adapter) => adapter.provider === provider.trim().toLowerCase());
+  const adapter = ADAPTERS.find((item) => item.provider === provider.trim().toLowerCase());
+  return adapter ? { ...adapter, ...getCapabilityProfile(adapter.provider) } : undefined;
 }
 
 export function adapterPlan(provider?: string): IntegrationAdapterPlan[] {
@@ -340,6 +396,7 @@ export function adapterPlan(provider?: string): IntegrationAdapterPlan[] {
       implementation: adapter.implementation,
       capabilities: adapter.capabilities,
       writePolicy: adapter.writePolicy,
+      ...getCapabilityProfile(adapter.provider),
       notes: adapter.notes,
       nextActions,
     };
@@ -370,6 +427,7 @@ export function platformGuide(provider?: string, goal?: string) {
     capabilities: adapter.capabilities,
     moduleIds: adapter.moduleIds,
     writePolicy: adapter.writePolicy,
+    ...getCapabilityProfile(adapter.provider),
     notes: adapter.notes,
   }));
 

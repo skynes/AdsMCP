@@ -13,7 +13,8 @@ compare results, and spend less time on routine work.
 Our goal is to make advertising simple: from audience research to launch and
 optimization through a familiar chat, with you in control.
 
-> Early version `0.1.0`: the local core works; integration capabilities vary.
+> Release `1.1.0`: the local core and modular integrations are available; each
+> provider exposes its own capability and safety boundaries.
 > The full advertising lifecycle through an agent is on the roadmap.
 
 ## What it can do today
@@ -46,13 +47,15 @@ Changes on external platforms require explicit confirmation.
 | Mastodon | ✅ Account and conversations | OAuth, mention reads, replies, and profile updates. |
 | CRM / Webhook | ✅ Event ingestion | Import submitted conversion events; CRM management is not implemented. |
 | VK Ads via Click.ru | 🟡 Manual step required | Read-only broker connected; initial VK account linking is required. |
-| Apple Search Ads | 🟡 Connection template | External MCP read path configured; no local SQLite import yet. |
-| TikTok Ads | 🟡 Connection template | External MCP connection via OAuth prepared, read-only. |
-| Reddit Ads | 🟡 Connection template | External MCP connection for campaigns and reports prepared, read-only. |
-| Meta Ads | 📋 Planned | Adapter contract documented; Graph API integration is not implemented yet. |
+| Avito Ads | 🟡 Module path ready | Official Avito Ads API through a local read-only MCP allowlist. |
+| Apple Search Ads | 🟡 Module path ready | Local read-only MCP for Apple Ads Platform API v1; 57 read tools, writes disabled. |
+| TikTok Ads | 🟡 Module path ready | Local read-only MCP for the TikTok Business API; 35 read tools, writes disabled. |
+| Reddit Ads | 🟡 Module path ready | Local read-only MCP for the official Reddit Ads API v3; write tier is disabled. |
+| Email / SMTP + IMAP | 🟡 Module path ready | IMAP checks and SMTP sending via a restricted allowlist; destructive mailbox tools stay disabled. |
+| Meta Ads | 🟡 Module path ready | Local read-only MCP for the official Meta Graph/Marketing API; 41 read tools, writes disabled. |
 | OpenAI Ads / ChatGPT | 📋 Candidate | API availability and the advertising account model need verification. |
-| Spotify Ads | 📋 Candidate | API and reporting integration are not implemented yet. |
-| X Ads | 📋 Candidate | API access and advertising account requirements need verification. |
+| Spotify Ads | 🟡 Module path ready | Local Adport MCP connects directly to the official Spotify Ads API; writes stay outside the allowlist. |
+| X Ads | 🟡 Module path ready | Local read-only MCP connects directly to the official X Ads API; OAuth refresh remains external. |
 
 See the [integration guide (Russian)](./docs/INTEGRATIONS.ru.md) for details
 and the [roadmap](./docs/ROADMAP.md) for next steps.

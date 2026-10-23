@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,6 +7,19 @@ import { Script } from "node:vm";
 
 const dataDir = mkdtempSync(join(tmpdir(), "adsmcp-settings-smoke-"));
 process.env.ADS_MCP_DATA = dataDir;
+process.env.ADS_MCP_MODULES_FILE = join(dataDir, "modules.json");
+writeFileSync(process.env.ADS_MCP_MODULES_FILE, JSON.stringify({
+  modules: [{
+    id: "email",
+    provider: "email",
+    label: "Email MCP",
+    transport: "stdio",
+    command: "node",
+    args: ["-e", ""],
+    inherit_env: ["MCP_EMAIL_ADDRESS"],
+    allow_tools: ["list_accounts"],
+  }],
+}, null, 2));
 const { startClickruSettingsServer, stopClickruSettingsServer } = await import("../dist/clickru-settings-server.js");
 
 function call(url, { method = "GET", headers = {}, path = "/", body } = {}) {
@@ -31,6 +44,8 @@ try {
   assert.ok(page.text.includes('Local dashboard for advertising connections'));
   assert.match(page.text, /<img class="brand-mark" src="data:image\/png;base64,[A-Za-z0-9+/=]+" alt="AdsMCP logo"/, 'settings dashboard embeds the branding logo');
   assert.ok(page.text.includes('data-home-settings'), 'Home links to the settings flow');
+  assert.ok(page.text.includes('data-page="modules"'), 'dashboard exposes the modules page');
+  assert.ok(page.text.includes('id="moduleRows"'), 'dashboard exposes the module status table');
   assert.equal((page.text.match(/class="panel integration-group"/g) || []).length, 5, 'all integration groups are present');
   assert.equal((page.text.match(/aria-expanded="false"/g) || []).length, 5, 'integration groups start collapsed');
   assert.equal((page.text.match(/class="integration-body" hidden/g) || []).length, 5, 'integration bodies start hidden');
@@ -107,6 +122,31 @@ try {
     headers: { 'Accept-Language': 'en', 'x-local-settings-token': nonce },
   });
   assert.equal(JSON.parse(invalidYandex.text).error, 'Yandex OAuth Client ID must contain 32 hexadecimal characters');
+  const moduleStatus = await call(url, { path: "/api/modules/status" });
+  assert.equal(moduleStatus.status, 200);
+  const modulePayload = JSON.parse(moduleStatus.text);
+  assert.equal(modulePayload.modules.length, 1);
+  assert.ok(modulePayload.secretsPath.endsWith("secrets\\module-secrets.json") || modulePayload.secretsPath.endsWith("secrets/module-secrets.json"));
+  assert.equal(modulePayload.modules[0].credentials.find((item) => item.key === "MCP_EMAIL_ADDRESS").configured, false);
+  assert.equal((await call(url, {
+    method: "POST",
+    path: "/api/modules/secrets",
+    body: JSON.stringify({ moduleId: "email", values: { MCP_EMAIL_ADDRESS: "test@example.com" } }),
+  })).status, 403, "module secrets require CSRF");
+  const savedModuleSecret = await call(url, {
+    method: "POST",
+    path: "/api/modules/secrets",
+    body: JSON.stringify({ moduleId: "email", values: { MCP_EMAIL_ADDRESS: "test@example.com" } }),
+    headers: { Origin: new URL(url).origin, "x-local-settings-token": nonce },
+  });
+  assert.equal(savedModuleSecret.status, 200);
+  assert.deepEqual(JSON.parse(savedModuleSecret.text).savedKeys, ["MCP_EMAIL_ADDRESS"]);
+  assert.ok(!savedModuleSecret.text.includes("test@example.com"), "save response never returns the secret");
+  const savedStatus = JSON.parse((await call(url, { path: "/api/modules/status" })).text);
+  const savedCredential = savedStatus.modules[0].credentials.find((item) => item.key === "MCP_EMAIL_ADDRESS");
+  assert.equal(savedCredential.source, "module_file");
+  assert.equal(savedCredential.configured, true);
+  assert.ok(!JSON.stringify(savedStatus).includes("test@example.com"), "status never returns the secret");
   console.log("AdsMCP settings security and language smoke tests passed");
 } finally {
   await stopClickruSettingsServer();

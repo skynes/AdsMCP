@@ -1,3 +1,5 @@
+import type { CapabilityMatrixScores, CapabilityTag, CapabilityTier } from "./capability-profile.js";
+
 export type IntegrationAdapterMode = "api" | "mcp_module" | "browser_assisted" | "webhook";
 
 export type AdapterWritePolicy = "guarded_api" | "manual_only" | "event_ingest";
@@ -38,6 +40,12 @@ export interface IntegrationAdapterPlan {
   implementation: AdapterImplementation;
   capabilities: string[];
   writePolicy: AdapterWritePolicy;
+  capabilityTags: CapabilityTag[];
+  capabilityTier: CapabilityTier;
+  matrixCapabilityTags: CapabilityTag[];
+  matrixCapabilityTier: CapabilityTier;
+  matrixScores?: CapabilityMatrixScores;
+  matrixNote?: string;
   notes: string;
   nextActions: string[];
 }

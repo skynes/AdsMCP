@@ -12,7 +12,7 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 могут потребоваться рекламный кабинет, авторизация OAuth, токены и установка
 внешнего модуля.
 
-Последняя проверка: **2026-10-08**.
+Последняя проверка: **2026-10-23**.
 
 | Провайдер | Статус | Текущий путь интеграции | Запись |
 | --- | --- | --- | --- |
@@ -22,15 +22,54 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 | Telegram user account / GramJS (TDLib optional) | ✅ Guarded local account layer | GramJS по умолчанию; credentials в `.env`, состояние в игнорируемом `ADS_MCP_DATA/telegram/` | Premium-gated discovery, guarded personal/public replies, consent/activity/rate-limit gates |
 | Mastodon / fediverse account | ✅ Guarded local account layer | OAuth 2 + PKCE для выбранного инстанса; локальное состояние в `ADS_MCP_DATA/mastodon-accounts.json` | Mention reads, единичные ответы и профиль после `confirm=true` |
 | Microsoft Advertising / Bing | ✅ Интегрирован | Официальный remote MCP и локальный normalization adapter | Только чтение |
+| Avito Ads | ✅ Интегрирован · read-only | `A1-x-tech/mcp-avito-ads` v1.1.0 через локальный stdio; официальный Avito Ads API | Только чтение; writes, money transfer и raw API закрыты allowlist |
 | VK Ads через Click.ru | 🟡 Ручной блокер | Click.ru broker работает read-only; привязка VK требует ручного шага | Только чтение |
-| Apple Search Ads | 🟡 Готов модульный путь | Есть MCP manifest и read-only allowlist; локального sync-адаптера пока нет | Только чтение |
+| Apple Search Ads | 🟡 Готов модульный путь | Локальный MCP для Apple Ads Platform API v1; 57 read tools, writes выключены | Только чтение |
 | TikTok Ads | 🟡 Готов модульный путь | Есть MCP manifest и OAuth-путь настройки | Только чтение |
-| Reddit Ads | 🟡 Готов модульный путь | Есть MCP manifest и reporting-путь | Только чтение |
-| Meta Ads | 📋 Планируется | Контракт адаптера описан, Graph API runtime ещё не включён | Не включено |
+| Reddit Ads | ✅ Интегрирован · read-only | `camlowe/mcp-server-reddit-ads` v0.5.5 через локальный stdio; официальный Reddit Ads API v3 | Только чтение; write tier и provider write-tools закрыты |
+| Meta Ads | 🟡 Готов модульный путь | Локальный MCP напрямую подключает Meta Graph/Marketing API; 41 read tool, writes выключены | Только чтение |
+| Email / SMTP + IMAP | 🟡 Готов модульный путь | `@codefuturist/email-mcp@0.6.0` через stdio; IMAP для чтения и SMTP для отправки | Чтение + отправка/ответ/пересылка/черновики; destructive и bulk tools закрыты |
 | OpenAI Ads / ChatGPT | 📋 Планируется | Кандидатный adapter path для рекламной поверхности OpenAI и ChatGPT; API и модель кабинета ещё не подтверждены | Не включено |
-| Spotify Ads | 📋 Планируется | Кандидатный adapter path для аудио- и video-кампаний Spotify; API и reporting-путь ещё не включены | Не включено |
-| X Ads | 📋 Планируется | Кандидатный adapter path для кампаний X; доступ к текущему API и eligibility кабинета требуют проверки | Не включено |
+| X Ads | 🟡 Готов модульный путь | Локальный read-only MCP поверх официального X Ads API; официальный remote MCP требует OAuth2/PKCE, которого пока нет в текущем bridge | Только чтение |
+| Spotify Ads | 🟡 Готов модульный путь | Локальный Adport MCP напрямую подключает официальный Spotify Ads API; writes остаются за allowlist | Только чтение |
 | CRM / Webhook | ✅ Источник конверсий | Локальный ingest конверсий и generic server-side events | Только ingest |
+
+## Теги capability и связь с матрицей оценки
+
+Теги разделены на два слоя. **Runtime tag** показывает, что реально открыто в
+AdsMCP сейчас, включая локальный `allow_tools`. **Matrix tag** показывает
+потенциал лучшего проверенного API/MCP-кандидата из исследовательской матрицы.
+Поэтому, например, TikTok имеет `read` в runtime, но `read + write +
+campaign_create` в matrix: выбранный локальный модуль намеренно работает
+read-only.
+
+Под `campaign_create` понимается создание рекламной кампании. Создание самого
+рекламного кабинета вынесено в отдельный `account_create`; `payment` означает
+платёжный capability матрицы, а не просто чтение баланса или изменение
+бюджета. Для Telegram оплата отмечена как partial: TON/KYC требуют внешнего
+шага и не считаются полностью автоматизированными в AdsMCP.
+
+| Провайдер | Runtime tag | Matrix tag | A/B/C/D/Σ | Почему отличается |
+| --- | --- | --- | ---: | --- |
+| Google Ads | `read + write` | `read + write + campaign_create` | `0/28/5/18/56` | Agent writes guarded; создание кампании не входит в открытый local surface |
+| Yandex Direct | `read + write + campaign_create` | `read + write + campaign_create` | `0/30/5/17/57` | Есть отдельный create-tool с показами off |
+| Telegram Ads | `read + write + campaign_create` | `read + write + campaign_create + account_create + payment` | `5/22/12/13/52` | Создание и budget writes guarded; payment в матрице только partial |
+| VK Ads через Click.ru | `read` | `read + write + campaign_create` | `0/24/5/14/48` | Выбранный broker read-only; score относится к прямому MCP-кандидату |
+| Avito Ads | `read` | `read + write + campaign_create` | `0/22/5/14/41` | Create, bid, budget и money-transfer tools закрыты allowlist |
+| Microsoft Advertising / Bing | `read` | `read` | `0/0/5/15/25` | Official pilot подключён как read-only |
+| Meta Ads | `read` | `read + write + campaign_create` | `0/28/5/15/52` | Graph runtime ещё не включён; модульный путь read-only |
+| X Ads | `read` | `read + write + campaign_create` | `0/20/5/14/39` | Локальный модуль пишет только после отдельного write-решения |
+| Spotify Ads | `read` | `read` | `—` | Проверенного campaign-write API в текущей матрице нет |
+| Apple Search Ads | `read` | `read + write + campaign_create` | `0/24/5/14/48` | Provider candidates имеют preview/approve writes, наш allowlist read-only |
+| TikTok Ads | `read` | `read + write + campaign_create` | `0/30/5/15/55` | Пакет запускается с `TIKTOK_ENABLE_WRITES=0`, writes не allowlisted |
+| Reddit Ads | `read` | `read + write + campaign_create` | `0/22/5/16/48` | Community CRUD-кандидаты не открыты в выбранном модуле |
+| Email / SMTP + IMAP | `read + write` | `read + write` | `—` | SMTP отправка и IMAP чтение нужны по задаче; удаление, bulk и mailbox management не открыты |
+
+Уровень `read + write + campaign_create + payment` сейчас не является
+полностью подтверждённым runtime-уровнем ни для одной подключённой сети.
+Telegram — ближайший кандидат по матрице, но его payment capability остаётся
+частичным. Исходные баллы A/B/C/D сохранены в
+[research/research-matrix.md](../research/research-matrix.md).
 
 Причины выбора модулей и альтернативы описаны в [обзоре провайдеров](./PROVIDER-MODULES.md),
 а ограничения VK через брокера — в [статусе Click.ru](./CLICK-RU-STATUS.md).
@@ -101,3 +140,28 @@ Telegram account для входа по QR-коду или телефону, к�
 поддерживает чтение упоминаний, ответы на статусы и изменение профиля;
 действия записи требуют `confirm=true`.
 Настройка и поддерживаемые сценарии — в [инструкции Mastodon](./MASTODON-CONNECTOR.ru.md).
+
+## Email / SMTP + IMAP
+
+Для проверки входящих писем нужен IMAP, а для отправки — SMTP. Подключён
+`@codefuturist/email-mcp@0.6.0`; выбранный allowlist разрешает чтение и поиск
+писем, работу с вложениями, `send_email`, `reply_email`, `forward_email` и
+`save_draft`. Удаление, массовые операции, переносы, labels, планировщик,
+уведомления и календарь не подключены.
+
+Минимальная настройка в игнорируемом `.env`:
+
+```dotenv
+MCP_EMAIL_ADDRESS=you@example.com
+MCP_EMAIL_PASSWORD=app-password
+MCP_EMAIL_IMAP_HOST=imap.example.com
+MCP_EMAIL_SMTP_HOST=smtp.example.com
+```
+
+Порты и TLS по умолчанию: IMAP `993`, SMTP `465`; для SMTP STARTTLS можно
+включить `MCP_EMAIL_SMTP_STARTTLS=true` и отключить `MCP_EMAIL_SMTP_TLS`.
+Текущий пакет требует Node.js 24 или новее; `MCP_EMAIL_READ_ONLY=true`
+дополнительно отключает его почтовые write-tools.
+Для нескольких аккаунтов используется `EMAIL_ACCOUNTS` по формату выбранного
+пакета. Полное решение, альтернативы и ограничения — в
+[ADR 0016](./decisions/0016-email-smtp-imap-mcp.md).

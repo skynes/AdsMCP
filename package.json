@@ -1,6 +1,6 @@
 {
   "name": "@skynes/ads-mcp",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Local MCP server for advertising campaign operations, conversion analytics and automation.",
   "type": "module",
   "main": "dist/index.js",

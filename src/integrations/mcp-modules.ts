@@ -7,6 +7,9 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { getClickruToken } from "../clickru-settings.js";
 import { loadEnv } from "../env.js";
 import { getMicrosoftAdsAccessToken } from "../microsoft-ads-settings.js";
+import { getModuleSecret, moduleSecretValues } from "./module-secrets.js";
+import { getCapabilityProfile } from "./capability-profile.js";
+import type { CapabilityMatrixScores, CapabilityTag, CapabilityTier } from "./capability-profile.js";
 
 type ModuleTransport = "stdio" | "streamable_http";
 
@@ -25,6 +28,12 @@ export interface AdsMcpModuleConfig {
   inherit_env?: string[];
   allow_tools?: string[];
   capabilities?: string[];
+  capability_tags?: CapabilityTag[];
+  capability_tier?: CapabilityTier;
+  matrix_capability_tags?: CapabilityTag[];
+  matrix_capability_tier?: CapabilityTier;
+  matrix_scores?: CapabilityMatrixScores;
+  matrix_note?: string;
   notes?: string;
   source_url?: string;
   source_ref?: string;
@@ -45,9 +54,18 @@ export interface AdsMcpModuleSummary {
   configured: boolean;
   command?: string;
   args?: string[];
+  tokenEnv?: string;
+  envKeys: string[];
+  inheritEnv: string[];
   url?: string;
   allowTools?: string[];
   capabilities: string[];
+  capabilityTags: CapabilityTag[];
+  capabilityTier: CapabilityTier;
+  matrixCapabilityTags: CapabilityTag[];
+  matrixCapabilityTier: CapabilityTier;
+  matrixScores?: CapabilityMatrixScores;
+  matrixNote?: string;
   notes?: string;
   sourceUrl?: string;
   sourceRef?: string;
@@ -102,19 +120,20 @@ function isNonEmpty(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function sourceEnvValue(value: string): string {
+function sourceEnvValue(value: string, moduleId?: string): string {
   const match = value.match(/^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/);
-  return match ? process.env[match[1]] || "" : value;
+  if (!match) return value;
+  return process.env[match[1]] || (moduleId ? getModuleSecret(moduleId, match[1]) || "" : "");
 }
 
-function sourceSecretValue(name: string): string {
+function sourceSecretValue(name: string, moduleId?: string): string {
   if (name === "ADS_CLICKRU_API_TOKEN") return getClickruToken() || "";
-  return process.env[name] || "";
+  return process.env[name] || (moduleId ? getModuleSecret(moduleId, name) || "" : "");
 }
 
-function resolveUrlTemplate(value: string): string {
+function resolveUrlTemplate(value: string, moduleId?: string): string {
   return value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_match, name: string) => {
-    const resolved = sourceSecretValue(name);
+    const resolved = sourceSecretValue(name, moduleId);
     if (!resolved) throw new Error(`missing URL template environment value: ${name}`);
     return encodeURIComponent(resolved);
   });
@@ -122,13 +141,14 @@ function resolveUrlTemplate(value: string): string {
 
 function childEnv(module: AdsMcpModuleConfig): Record<string, string> | undefined {
   const keys = new Set(module.inherit_env || []);
+  const stored = moduleSecretValues(module.id);
   const env: Record<string, string> = {};
   for (const key of keys) {
-    const value = process.env[key];
+    const value = process.env[key] ?? stored[key];
     if (value !== undefined) env[key] = value;
   }
   for (const [key, value] of Object.entries(module.env || {})) {
-    const resolved = sourceEnvValue(value);
+    const resolved = sourceEnvValue(value, module.id);
     if (resolved) env[key] = resolved;
   }
   return Object.keys(env).length ? env : undefined;
@@ -145,6 +165,16 @@ function summary(module: AdsMcpModuleConfig, error?: string): AdsMcpModuleSummar
   const enabled = module.enabled !== false;
   const commandReady = module.transport === "stdio" && isNonEmpty(module.command);
   const urlReady = module.transport === "streamable_http" && isNonEmpty(module.url);
+  const capabilityProfile = getCapabilityProfile(module.provider);
+  const moduleCapabilityProfile = {
+    ...capabilityProfile,
+    ...(module.capability_tags ? { capabilityTags: [...module.capability_tags] } : {}),
+    ...(module.capability_tier ? { capabilityTier: module.capability_tier } : {}),
+    ...(module.matrix_capability_tags ? { matrixCapabilityTags: [...module.matrix_capability_tags] } : {}),
+    ...(module.matrix_capability_tier ? { matrixCapabilityTier: module.matrix_capability_tier } : {}),
+    ...(module.matrix_scores ? { matrixScores: { ...module.matrix_scores } } : {}),
+    ...(module.matrix_note ? { matrixNote: module.matrix_note } : {}),
+  };
   return {
     id: module.id,
     provider: module.provider,
@@ -154,9 +184,13 @@ function summary(module: AdsMcpModuleConfig, error?: string): AdsMcpModuleSummar
     configured: enabled && (commandReady || urlReady),
     command: module.command,
     args: module.args,
+    ...(module.token_env ? { tokenEnv: module.token_env } : {}),
+    envKeys: Object.keys(module.env || {}),
+    inheritEnv: [...(module.inherit_env || [])],
     url: module.url,
     allowTools: module.allow_tools,
     capabilities: module.capabilities || [],
+    ...moduleCapabilityProfile,
     notes: module.notes,
     sourceUrl: module.source_url,
     sourceRef: module.source_ref,
@@ -196,7 +230,7 @@ async function withModuleClient<T>(
   module: AdsMcpModuleConfig,
   action: (client: Client) => Promise<T>,
 ): Promise<T> {
-  const client = new Client({ name: "ads-mcp-module-bridge", version: "0.1.0" }, { capabilities: {} });
+  const client = new Client({ name: "ads-mcp-module-bridge", version: "1.1.0" }, { capabilities: {} });
   let transport: StdioClientTransport | StreamableHTTPClientTransport;
   if (module.transport === "stdio") {
     transport = new StdioClientTransport({
@@ -209,12 +243,12 @@ async function withModuleClient<T>(
   } else {
     const headers: Record<string, string> = {};
     const token = module.token_env === "MICROSOFT_ADS_ACCESS_TOKEN"
-      ? await getMicrosoftAdsAccessToken()
+      ? (await getMicrosoftAdsAccessToken()) || getModuleSecret(module.id, module.token_env)
       : module.token_env
-        ? process.env[module.token_env]?.trim()
+        ? process.env[module.token_env]?.trim() || getModuleSecret(module.id, module.token_env)
         : undefined;
     if (token) headers.Authorization = `Bearer ${token}`;
-    transport = new StreamableHTTPClientTransport(new URL(resolveUrlTemplate(module.url!)), {
+    transport = new StreamableHTTPClientTransport(new URL(resolveUrlTemplate(module.url!, module.id)), {
       requestInit: Object.keys(headers).length ? { headers } : undefined,
     });
   }

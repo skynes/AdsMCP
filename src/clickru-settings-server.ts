@@ -45,6 +45,9 @@ import {
   yandexDirectAuthorizationUrl,
   yandexDirectSettingsStatus,
 } from "./yandex-direct-settings.js";
+import { listModuleTools } from "./integrations/mcp-modules.js";
+import { moduleDashboardCredentialKeys, moduleDashboardStatus } from "./integrations/module-status.js";
+import { saveModuleSecrets } from "./integrations/module-secrets.js";
 
 const HOST = "127.0.0.1";
 const DEFAULT_PORT = 8790;
@@ -120,6 +123,21 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
     .actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .actions button, .actions .button-link { margin-top: 0; }
     .status-line { min-height: 22px; margin-top: 14px; color: #93c5fd; }
+    .table-wrap { overflow-x: auto; }
+    .module-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .module-table th, .module-table td { padding: 10px 8px; border-bottom: 1px solid #273449; text-align: left; vertical-align: top; }
+    .module-table th { color: #9ca3af; font-weight: 600; white-space: nowrap; }
+    .module-table td code { white-space: nowrap; }
+    .module-command { display: block; max-width: 360px; overflow-wrap: anywhere; color: #9ca3af; }
+    .module-source { display: block; margin-top: 4px; color: #64748b; }
+    .module-credential { display: block; margin-top: 5px; color: #9ca3af; font-size: 12px; }
+    .module-credential.ok { color: #86efac; }
+    .module-credential.missing { color: #fcd34d; }
+    .module-check { margin-top: 0; padding: 7px 10px; font-size: 12px; }
+    .module-credential-form { margin-top: 10px; }
+    .module-credential-form label { margin-top: 14px; }
+    .module-credential-form input { margin-bottom: 2px; }
+    .module-hint { margin: 4px 0 0; color: #64748b; font-size: 12px; }
     .guide { margin: 16px 0; padding: 14px 16px; border-left: 3px solid #60a5fa; border-radius: 8px; background: #0d1627; color: #cbd5e1; font-size: 13px; line-height: 1.55; }
     .guide ol { margin: 8px 0 10px 20px; padding: 0; }
     .guide a { color: #93c5fd; }
@@ -139,6 +157,7 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
       <nav class="nav" aria-label="${t("Main navigation")}">
         <a href="#home" data-page="home" data-home-settings>${t("Home")}</a>
         <a href="#integrations" data-page="integrations">${t("Integrations")}</a>
+        <a href="#modules" data-page="modules">${t("Modules")}</a>
         <a href="#profiles" data-page="profiles">${t("Profiles")}</a>
         <a href="#campaigns" data-page="campaigns">${t("Campaigns")}</a>
       </nav>
@@ -162,6 +181,7 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
         <div class="card"><div class="card-label">Mastodon</div><div id="homeMastodon" class="card-value">${t("Checking…")}</div></div>
         <div class="card"><div class="card-label">${t("Profiles")}</div><div id="homeProfiles" class="card-value">${t("Checking…")}</div></div>
         <div class="card"><div class="card-label">${t("Campaigns")}</div><div id="homeCampaigns" class="card-value">${t("Checking…")}</div></div>
+        <div class="card"><div class="card-label">${t("Modules")}</div><div id="homeModules" class="card-value">${t("Checking…")}</div></div>
       </div>
       <div class="panel">
         <h3>${t("Quick actions")}</h3>
@@ -321,6 +341,31 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
       </div>
     </section>
 
+    <section id="modules" class="page-section">
+      <div class="section-head"><div><h2>${t("Modules")}</h2><p>${t("Review configured MCP modules, credentials and runtime status without exposing secrets.")}</p></div></div>
+      <div class="panel">
+        <div class="panel-head"><h3>${t("Configured MCP modules")}</h3><button id="refreshModules" type="button" class="button-link secondary">${t("Refresh status")}</button></div>
+        <p class="hint">${t("Module credentials are stored locally in") } <code id="moduleSecretsPath">${t("checking…")}</code>. ${t("Values are never returned to the browser; only masked status is shown.")}</p>
+        <div id="moduleStatusMessage" class="status-line" role="status" aria-live="polite"></div>
+        <div class="table-wrap">
+          <table class="module-table">
+            <thead><tr><th>${t("Module")}</th><th>${t("Credentials")}</th><th>${t("Runtime")}</th><th>${t("Source")}</th><th>${t("Action")}</th></tr></thead>
+            <tbody id="moduleRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>${t("Add or update module credentials")}</h3>
+        <p>${t("Enter only the values you want to save. Existing values are kept when a field is left blank.")}</p>
+        <label for="moduleSelect">${t("Select a module")}</label>
+        <select id="moduleSelect"></select>
+        <p id="moduleCredentialHelp" class="module-hint"></p>
+        <div id="moduleCredentialsForm" class="grid module-credential-form"></div>
+        <div class="actions"><button id="saveModuleCredentials" type="button">${t("Save module credentials")}</button></div>
+        <div id="moduleCredentialStatus" class="status-line" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section id="profiles" class="page-section">
       <div class="section-head"><div><h2>${t("Profiles")}</h2><p>${t("Advertiser profiles are saved locally and provide context for Click.ru.")}</p></div></div>
       <div class="panel">
@@ -476,6 +521,16 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
     const draftCta = document.querySelector('#draftCta');
     const saveDraft = document.querySelector('#saveDraft');
     const draftStatusMessage = document.querySelector('#draftStatusMessage');
+    const homeModules = document.querySelector('#homeModules');
+    const refreshModules = document.querySelector('#refreshModules');
+    const moduleSecretsPath = document.querySelector('#moduleSecretsPath');
+    const moduleRows = document.querySelector('#moduleRows');
+    const moduleStatusMessage = document.querySelector('#moduleStatusMessage');
+    const moduleSelect = document.querySelector('#moduleSelect');
+    const moduleCredentialHelp = document.querySelector('#moduleCredentialHelp');
+    const moduleCredentialsForm = document.querySelector('#moduleCredentialsForm');
+    const saveModuleCredentials = document.querySelector('#saveModuleCredentials');
+    const moduleCredentialStatus = document.querySelector('#moduleCredentialStatus');
     const mastodonInstance = document.querySelector('#mastodonInstance');
     const mastodonAccountId = document.querySelector('#mastodonAccountId');
     const connectMastodon = document.querySelector('#connectMastodon');
@@ -487,6 +542,7 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
     let profiles = [];
     let microsoftProfiles = [];
     let drafts = [];
+    let moduleStatuses = [];
     let telegramAccount = null;
     let mastodonAccounts = [];
     let requestedIntegrationGroup = null;
@@ -528,7 +584,7 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
     }
 
     function navigate() {
-      const page = ['home', 'integrations', 'profiles', 'campaigns'].includes(location.hash.slice(1))
+      const page = ['home', 'integrations', 'modules', 'profiles', 'campaigns'].includes(location.hash.slice(1))
         ? location.hash.slice(1)
         : 'home';
       for (const section of document.querySelectorAll('.page-section')) {
@@ -569,6 +625,216 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
       if (!response.ok) throw new Error(t(data.error || 'Could not save the data'));
       return data;
     }
+
+    function moduleSecretKey(key) {
+      return /(TOKEN|SECRET|PASSWORD|PRIVATE_KEY|REFRESH|API_KEY|API_HASH)/i.test(key);
+    }
+
+    function moduleSourceLabel(source) {
+      if (source === 'module_file') return t("module secret file");
+      if (source === 'environment') return t("environment (.env/process)");
+      return t("missing");
+    }
+
+    function moduleCell(text, className) {
+      const cell = document.createElement('td');
+      if (className) cell.className = className;
+      cell.textContent = text || '';
+      return cell;
+    }
+
+    function renderModuleRows() {
+      moduleRows.replaceChildren();
+      for (const module of moduleStatuses) {
+        const row = document.createElement('tr');
+        const name = document.createElement('td');
+        const title = document.createElement('strong');
+        title.textContent = module.label || module.id;
+        name.appendChild(title);
+        const identity = document.createElement('span');
+        identity.className = 'module-source';
+        identity.textContent = module.id + ' · ' + module.provider;
+        name.appendChild(identity);
+        row.appendChild(name);
+
+        const credentials = document.createElement('td');
+        const summary = document.createElement('div');
+        summary.textContent = module.requiredCount
+          ? module.configuredRequired + '/' + module.requiredCount + ' ' + t("required")
+          : t("no required credentials declared");
+        credentials.appendChild(summary);
+        for (const credential of module.credentials || []) {
+          const item = document.createElement('span');
+          item.className = 'module-credential ' + (credential.configured ? 'ok' : 'missing');
+          item.textContent = credential.key + ': ' + (credential.configured
+            ? moduleSourceLabel(credential.source) + (credential.maskedValue ? ' ' + credential.maskedValue : '')
+            : t("missing"));
+          credentials.appendChild(item);
+        }
+        row.appendChild(credentials);
+
+        const runtime = document.createElement('td');
+        const runtimeStatus = document.createElement('div');
+        runtimeStatus.textContent = module.runtimeStatus === 'passed'
+          ? t("handshake passed")
+          : module.runtimeStatus === 'failed'
+            ? t("handshake failed")
+            : module.configured ? t("manifest ready; not checked") : t("not configured");
+        runtime.appendChild(runtimeStatus);
+        if (module.runtimeMessage) {
+          const detail = document.createElement('span');
+          detail.className = 'module-source';
+          detail.textContent = module.runtimeMessage;
+          runtime.appendChild(detail);
+        }
+        row.appendChild(runtime);
+
+        const source = document.createElement('td');
+        const command = document.createElement('code');
+        command.className = 'module-command';
+        command.textContent = module.commandLine || module.transport;
+        source.appendChild(command);
+        if (module.sourceUrl) {
+          const link = document.createElement('a');
+          link.className = 'module-source';
+          link.href = module.sourceUrl;
+          link.target = '_blank';
+          link.rel = 'noreferrer';
+          link.textContent = module.sourceRef || module.sourceUrl;
+          source.appendChild(link);
+        }
+        row.appendChild(source);
+
+        const action = document.createElement('td');
+        const check = document.createElement('button');
+        check.type = 'button';
+        check.className = 'module-check button-link secondary';
+        check.textContent = t("Check runtime");
+        check.disabled = !module.configured;
+        check.addEventListener('click', () => checkModuleRuntime(module.id, check));
+        action.appendChild(check);
+        row.appendChild(action);
+        moduleRows.appendChild(row);
+      }
+      if (!moduleStatuses.length) {
+        const row = document.createElement('tr');
+        const cell = moduleCell(t("No configured MCP modules"));
+        cell.colSpan = 5;
+        row.appendChild(cell);
+        moduleRows.appendChild(row);
+      }
+    }
+
+    function renderModuleCredentialForm() {
+      const module = moduleStatuses.find((candidate) => candidate.id === moduleSelect.value);
+      moduleCredentialsForm.replaceChildren();
+      if (!module) {
+        moduleCredentialHelp.textContent = t("Configure modules/modules.json to edit module credentials.");
+        saveModuleCredentials.disabled = true;
+        return;
+      }
+      saveModuleCredentials.disabled = false;
+      moduleCredentialHelp.textContent = (module.notes || '') + ' ' + t("Blank fields keep existing values.");
+      for (const credential of module.credentials || []) {
+        const label = document.createElement('label');
+        label.className = 'wide';
+        label.htmlFor = 'module-credential-' + credential.key;
+        label.textContent = credential.key + (credential.required ? ' · ' + t("required") : ' · ' + t("optional"));
+        const input = document.createElement('input');
+        input.className = 'wide';
+        input.id = label.htmlFor;
+        input.dataset.moduleKey = credential.key;
+        input.type = moduleSecretKey(credential.key) ? 'password' : 'text';
+        input.autocomplete = 'off';
+        input.placeholder = credential.configured
+          ? t("Saved") + ' · ' + moduleSourceLabel(credential.source) + (credential.maskedValue ? ' ' + credential.maskedValue : '')
+          : t("Enter value");
+        moduleCredentialsForm.append(label, input);
+      }
+    }
+
+    async function refreshModuleStatuses() {
+      const response = await fetch('/api/modules/status');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || t("Could not read module status"));
+      moduleStatuses = data.modules || [];
+      moduleSecretsPath.textContent = data.secretsPath || t("not configured");
+      moduleSelect.replaceChildren(new Option(t('Select a module'), ''));
+      for (const module of moduleStatuses) {
+        const option = document.createElement('option');
+        option.value = module.id;
+        option.textContent = (module.label || module.id) + ' · ' + module.provider;
+        moduleSelect.appendChild(option);
+      }
+      if (moduleStatuses.length) moduleSelect.value = moduleStatuses.some((module) => module.id === moduleSelect.value)
+        ? moduleSelect.value
+        : moduleStatuses[0].id;
+      renderModuleCredentialForm();
+      renderModuleRows();
+      homeModules.textContent = countLabel(moduleStatuses.length, 'module', 'modules', ['модуль', 'модуля', 'модулей']);
+      homeModules.className = 'card-value ' + (moduleStatuses.length ? 'ok' : 'warn');
+      moduleStatusMessage.textContent = data.error || (moduleStatuses.length
+        ? t("Configured modules: ") + moduleStatuses.length
+        : t("No configured MCP modules"));
+    }
+
+    async function checkModuleRuntime(moduleId, button) {
+      button.disabled = true;
+      moduleStatusMessage.textContent = t("Checking module runtime…");
+      try {
+        const data = await postJson('/api/modules/check', { moduleId });
+        const module = moduleStatuses.find((candidate) => candidate.id === moduleId);
+        if (module) {
+          module.runtimeStatus = data.ok ? 'passed' : 'failed';
+          module.runtimeMessage = data.ok
+            ? t("Tools found: ") + data.toolCount
+            : (data.error || t("handshake failed"));
+        }
+        moduleStatusMessage.textContent = data.ok
+          ? t("Runtime check passed for ") + moduleId + '. ' + t("Tools found: ") + data.toolCount
+          : (data.error || t("Runtime check failed"));
+        renderModuleRows();
+      } catch (error) {
+        moduleStatusMessage.textContent = error instanceof Error ? error.message : t("Runtime check failed");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    moduleSelect.addEventListener('change', renderModuleCredentialForm);
+    refreshModules.addEventListener('click', async () => {
+      refreshModules.disabled = true;
+      try {
+        await refreshModuleStatuses();
+      } catch (error) {
+        moduleStatusMessage.textContent = error instanceof Error ? error.message : t("Could not read module status");
+      } finally {
+        refreshModules.disabled = false;
+      }
+    });
+
+    saveModuleCredentials.addEventListener('click', async () => {
+      const moduleId = moduleSelect.value;
+      const values = {};
+      for (const input of moduleCredentialsForm.querySelectorAll('input[data-module-key]')) {
+        if (input.value.trim()) values[input.dataset.moduleKey] = input.value;
+      }
+      if (!moduleId || !Object.keys(values).length) {
+        moduleCredentialStatus.textContent = t("Enter at least one credential value.");
+        return;
+      }
+      saveModuleCredentials.disabled = true;
+      moduleCredentialStatus.textContent = t("Saving module credentials locally…");
+      try {
+        const data = await postJson('/api/modules/secrets', { moduleId, values });
+        moduleCredentialStatus.textContent = t("Saved keys: ") + data.savedKeys.join(', ') + '. ' + t("Secrets are not displayed.");
+        await refreshModuleStatuses();
+      } catch (error) {
+        moduleCredentialStatus.textContent = error instanceof Error ? error.message : t("Could not save module credentials");
+      } finally {
+        saveModuleCredentials.disabled = false;
+      }
+    });
 
     async function refreshTokenStatus() {
       const response = await fetch('/api/clickru/status');
@@ -1120,13 +1386,14 @@ const PAGE = (nonce: string, language: SettingsLanguage, selection: SettingsLang
       }
     });
 
-    Promise.all([refreshTokenStatus(), refreshYandexStatus(), refreshMicrosoftProfiles(), refreshTelegramStatus(), refreshMastodonAccounts(), refreshProfiles(), refreshDrafts()]).catch(() => {
+    Promise.all([refreshTokenStatus(), refreshYandexStatus(), refreshMicrosoftProfiles(), refreshTelegramStatus(), refreshMastodonAccounts(), refreshProfiles(), refreshDrafts(), refreshModuleStatuses()]).catch(() => {
       profileStatus.textContent = t("Could not read local settings");
       draftStatusMessage.textContent = t("Could not read local campaigns");
       yandexStatus.textContent = t("Could not read Yandex Direct settings");
       microsoftStatus.textContent = t("Could not read the Microsoft profile");
       telegramStatus.textContent = t("Could not read Telegram account status");
       mastodonStatus.textContent = t("Could not read Mastodon status");
+      moduleStatusMessage.textContent = t("Could not read module status");
     });
   </script>
 </body>
@@ -1263,6 +1530,74 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
       res.setHeader("set-cookie", `${SETTINGS_LANGUAGE_COOKIE}=${choice === "auto" ? "" : choice}; Path=/; Max-Age=${choice === "auto" ? 0 : 31536000}; HttpOnly; SameSite=Lax`);
     }
     sendPage(res, preference.language, preference.selection);
+    return;
+  }
+  if (req.method === "GET" && url.pathname === "/api/modules/status") {
+    sendJson(res, 200, moduleDashboardStatus());
+    return;
+  }
+  if (req.method === "POST" && url.pathname === "/api/modules/secrets") {
+    if (req.headers["x-local-settings-token"] !== csrfToken) {
+      sendJson(res, 403, { error: "local settings token required" });
+      return;
+    }
+    const input = await readJson(req);
+    if (typeof input.moduleId !== "string" || !input.moduleId.trim()) {
+      sendJson(res, 400, { error: "moduleId is required" });
+      return;
+    }
+    if (!input.values || typeof input.values !== "object" || Array.isArray(input.values)) {
+      sendJson(res, 400, { error: "module credential values must be an object" });
+      return;
+    }
+    const allowed = new Set([
+      ...moduleDashboardCredentialKeys(input.moduleId).required,
+      ...moduleDashboardCredentialKeys(input.moduleId).optional,
+    ]);
+    const values: Record<string, string> = {};
+    for (const [key, value] of Object.entries(input.values as Record<string, unknown>)) {
+      if (!allowed.has(key)) {
+        sendJson(res, 400, { error: `credential key is not allowed for module ${input.moduleId}: ${key}` });
+        return;
+      }
+      if (typeof value !== "string") {
+        sendJson(res, 400, { error: `credential value must be a string: ${key}` });
+        return;
+      }
+      values[key] = value;
+    }
+    sendJson(res, 200, saveModuleSecrets(input.moduleId, values));
+    return;
+  }
+  if (req.method === "POST" && url.pathname === "/api/modules/check") {
+    if (req.headers["x-local-settings-token"] !== csrfToken) {
+      sendJson(res, 403, { error: "local settings token required" });
+      return;
+    }
+    const input = await readJson(req);
+    if (typeof input.moduleId !== "string" || !input.moduleId.trim()) {
+      sendJson(res, 400, { error: "moduleId is required" });
+      return;
+    }
+    try {
+      const result = await Promise.race([
+        listModuleTools(input.moduleId),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("module runtime check timed out")), 30_000)),
+      ]);
+      sendJson(res, 200, {
+        ok: true,
+        moduleId: input.moduleId,
+        toolCount: result.tools.length,
+        checkedAt: new Date().toISOString(),
+      });
+    } catch (cause) {
+      sendJson(res, 200, {
+        ok: false,
+        moduleId: input.moduleId,
+        error: cause instanceof Error ? cause.message : "module runtime check failed",
+        checkedAt: new Date().toISOString(),
+      });
+    }
     return;
   }
   if (req.method === "GET" && url.pathname === "/api/clickru/status") {

@@ -57,6 +57,11 @@ ad platforms / CRM / site
   но не в SQLite; расположение файлов описано в [руководстве пользователя](./USAGE.ru.md);
 - provider API logic stays in installed MCP modules; AdsMCP only bridges,
   normalizes and records the result locally;
+- credentials entered through the local dashboard are stored in
+  `ADS_MCP_DATA/secrets/module-secrets.json` with restrictive file permissions
+  where the filesystem supports them (on Windows use the data directory ACL);
+  module status endpoints expose only key names, source, masked suffixes and
+  runtime health;
 - импорт читает данные площадок и записывает результат только в локальное хранилище;
 - автоматизация по умолчанию выполняет пробный запуск (`dry-run`),
   для исполнения нужен `execute=true`;

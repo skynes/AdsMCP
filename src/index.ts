@@ -1139,7 +1139,7 @@ server.tool(
 
 server.tool(
   "ads_dashbord_start",
-  "Start the local AdsMCP settings page on 127.0.0.1. It stores Click.ru data, Yandex Direct OAuth token files and settings, Microsoft Advertising OAuth profiles and Mastodon OAuth account tokens locally, and provides the preferred local Telegram account / GramJS login flow; it never performs billing or campaign actions. Use restart=true only to replace an already-running page.",
+  "Start the local AdsMCP settings page on 127.0.0.1. It stores Click.ru data, Yandex Direct OAuth token files and settings, Microsoft Advertising OAuth profiles, Mastodon OAuth account tokens and configured MCP module credentials locally. The Modules page shows manifest, credential and runtime status without returning secrets, and provides the preferred local Telegram account / GramJS login flow; it never performs billing or campaign actions. Use restart=true only to replace an already-running page.",
   {
     port: z.number().int().min(0).max(65535).optional(),
     restart: z.boolean().optional(),
