@@ -369,6 +369,38 @@ allowlist должен включать только account/property discovery 
 Bing Webmaster write-tools остаются выключенными. До live-handshake и проверки
 OAuth его нельзя считать включённым production-модулем.
 
+## TikTok Ads: официальный Business API и готовые MCP-кандидаты
+
+Дата проверки: **2026-10-23**. TikTok документирует [Marketing API v2.0](https://business-api.tiktok.com/portal/docs/marketing-api/v2.0)
+для чтения рекламных сущностей, reporting и управления Ads Manager. У TikTok
+уже есть официальный [TikTok for Business MCP Server](https://ads.us.tiktok.com/resources/help/article/about-tiktok-for-business-mcp-server?lang=en)
+с двумя remote URL: full disclosure примерно на 400 tools и progressive
+disclosure примерно на 40 tools. Для AdsMCP он не выбран как core, потому что
+это hosted endpoint с широкой campaign-management write-поверхностью и без
+локального allowlist-контроля.
+
+| Кандидат | Что полезно | Ограничение | Решение |
+| --- | --- | --- | --- |
+| [getmcpads-com/tiktok-ads-mcp-server](https://github.com/getmcpads-com/tiktok-ads-mcp-server) `v2.0.1` | локальный stdio, прямой TikTok Business API, 35 read-tools, 29 writes выключены по умолчанию, 277 metrics, Apache-2.0, Node 22/24 CI | молодой runtime; требует Node 22.12+ и TikTok access token + App ID | выбранный runtime |
+| [TikTok for Business MCP Server](https://ads.us.tiktok.com/resources/help/article/about-tiktok-for-business-mcp-server?lang=en) | first-party bridge, zero-code подключение, полный и progressive режимы, campaign/report/audience/creative workflows | remote, около 400/40 tools, writes доступны по модели TikTok, нет нашего локального allowlist | official optional connector |
+| [AdsMCP/tiktok-ads-mcp-server](https://github.com/AdsMCP/tiktok-ads-mcp-server) | MIT, local Python/uv stdio, OAuth tools, read-only campaigns/reports/audiences/pixels, 54 stars | 11 commits, no pinned release package, уже более узкое покрытие и отдельный uv checkout | не выбран; read-only fallback |
+| [tiktok-mcp на PyPI](https://pypi.org/project/tiktok-mcp/0.2.0/) | local `uvx`, keyring, Marketing API плюс Display/Organic/Content Posting, writes gated | слишком широкий multi-surface runtime и account-change flows для AdsMCP Ads-only модуля | не выбран как core |
+| [dhawalshah/tiktok-ads-mcp](https://github.com/dhawalshah/tiktok-ads-mcp) | Python stdio, campaigns/video/audience/benchmarks, optional Cloud Run OAuth | Firestore/Cloud Run для remote mode, ручной install, молодой проект и токеновый контур сложнее | не выбран |
+| [leverageaiapp/tiktok-ads-mcp](https://github.com/leverageaiapp/tiktok-ads-mcp) | локальный CLI/MCP, reports и dry-run mutation mode | write tools присутствуют, узкое покрытие, нет стабильного pinned distribution path | не выбран |
+
+Решение зафиксировано в [ADR 0015](decisions/0015-tiktok-ads-mcp.md). В
+runtime используется `npx -y @getmcpads/tiktok-ads-mcp-server@2.0.1`, а
+`TIKTOK_ENABLE_WRITES=0` передаётся явно. В allowlist входят только 35 read
+tools: advertisers, campaigns, ad groups, ads, targeting, audiences, pixels,
+events, creatives, reports, delivery diagnostics, asset metadata и GET-only
+raw reads. Все 29 write tools исключены и не регистрируются в AdsMCP.
+
+Для авторизации нужны `TIKTOK_ACCESS_TOKEN` и принадлежащий ему
+`TIKTOK_APP_ID`; `TIKTOK_APP_SECRET` остаётся optional для endpoints, которым
+нужна app authentication. Первая проверка: `tiktok_health_check`, затем
+`tiktok_list_advertisers`, `tiktok_get_campaigns` и `tiktok_get_insights`.
+Токен не сохраняется в SQLite, MCP arguments или логах AdsMCP.
+
 ## Как заменить модуль позже
 
 Новый кандидат не должен требовать переписывания всей системы. Нужно проверить:

@@ -24,7 +24,7 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 | Microsoft Advertising / Bing | ✅ Интегрирован | Официальный remote MCP и локальный normalization adapter | Только чтение |
 | VK Ads через Click.ru | 🟡 Ручной блокер | Click.ru broker работает read-only; привязка VK требует ручного шага | Только чтение |
 | Apple Search Ads | 🟡 Готов модульный путь | Есть MCP manifest и read-only allowlist; локального sync-адаптера пока нет | Только чтение |
-| TikTok Ads | 🟡 Готов модульный путь | Есть MCP manifest и OAuth-путь настройки | Только чтение |
+| TikTok Ads | 🟡 Готов модульный путь | Локальный MCP напрямую подключает TikTok Business API; 35 read tools, writes выключены | Только чтение |
 | Reddit Ads | 🟡 Готов модульный путь | Есть MCP manifest и reporting-путь | Только чтение |
 | Meta Ads | 📋 Планируется | Контракт адаптера описан, Graph API runtime ещё не включён | Не включено |
 | OpenAI Ads / ChatGPT | 📋 Планируется | Кандидатный adapter path для рекламной поверхности OpenAI и ChatGPT; API и модель кабинета ещё не подтверждены | Не включено |
