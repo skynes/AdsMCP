@@ -1,4 +1,5 @@
 import type { IntegrationAdapterInfo, IntegrationAdapterPlan } from "./contracts.js";
+import { getCapabilityProfile } from "./capability-profile.js";
 import { listConfiguredModules } from "./mcp-modules.js";
 import { mastodonCredentialsConfigured } from "../mastodon/client.js";
 
@@ -203,6 +204,22 @@ const ADAPTERS: IntegrationAdapterInfo[] = [
     notes: "Official Microsoft Advertising MCP is remote and OAuth-based; keep Bing writes manual-only until the local OAuth flow is integrated.",
   },
   {
+    provider: "avito_ads",
+    label: "Avito Ads",
+    mode: "mcp_module",
+    intro: "Российская площадка объявлений и performance-размещение для локального спроса, marketplace-сценариев и услуг.",
+    audiences: ["локальный спрос", "покупатели товаров", "услуги и недвижимость", "российские регионы"],
+    bestFor: ["локальные продажи", "marketplace-предложения", "товары и услуги", "региональное продвижение"],
+    setupLevel: "high",
+    capabilities: ["accounts.read", "balances.read", "campaigns.read", "ad_groups.read", "creatives.read", "reports.read", "contracts.read", "users.read"],
+    secretEnv: ["AVITO_ADS_CLIENT_ID", "AVITO_ADS_CLIENT_SECRET", "AVITO_ADS_ACCOUNT_ID"],
+    optionalEnv: ["AVITO_ADS_ENVIRONMENT", "AVITO_ADS_TIMEOUT_MS", "AVITO_ADS_MAX_RETRIES", "AVITO_ADS_TOKEN_LEEWAY_SECONDS", "ASKADS_TELEMETRY"],
+    moduleIds: ["avito_ads"],
+    implementation: "module",
+    writePolicy: "manual_only",
+    notes: "A1-x-tech MCP for the official Avito Ads API. The selected allowlist is read-only; budget, bid, money-transfer, create and raw-request tools remain disabled.",
+  },
+  {
     provider: "apple_search_ads",
     label: "Apple Search Ads",
     mode: "mcp_module",
@@ -284,6 +301,7 @@ export function listAdapterInfo(): Array<IntegrationAdapterInfo & { configured: 
   const modules = listConfiguredModules();
   return ADAPTERS.map((adapter) => ({
     ...adapter,
+    ...getCapabilityProfile(adapter.provider),
     configured:
       (adapter.provider === "mastodon"
         ? mastodonCredentialsConfigured()
@@ -294,7 +312,8 @@ export function listAdapterInfo(): Array<IntegrationAdapterInfo & { configured: 
 }
 
 export function getAdapterInfo(provider: string): IntegrationAdapterInfo | undefined {
-  return ADAPTERS.find((adapter) => adapter.provider === provider.trim().toLowerCase());
+  const adapter = ADAPTERS.find((item) => item.provider === provider.trim().toLowerCase());
+  return adapter ? { ...adapter, ...getCapabilityProfile(adapter.provider) } : undefined;
 }
 
 export function adapterPlan(provider?: string): IntegrationAdapterPlan[] {
@@ -341,6 +360,7 @@ export function adapterPlan(provider?: string): IntegrationAdapterPlan[] {
       implementation: adapter.implementation,
       capabilities: adapter.capabilities,
       writePolicy: adapter.writePolicy,
+      ...getCapabilityProfile(adapter.provider),
       notes: adapter.notes,
       nextActions,
     };
@@ -371,6 +391,7 @@ export function platformGuide(provider?: string, goal?: string) {
     capabilities: adapter.capabilities,
     moduleIds: adapter.moduleIds,
     writePolicy: adapter.writePolicy,
+    ...getCapabilityProfile(adapter.provider),
     notes: adapter.notes,
   }));
 

@@ -46,6 +46,7 @@ Changes on external platforms require explicit confirmation.
 | Mastodon | ✅ Account and conversations | OAuth, mention reads, replies, and profile updates. |
 | CRM / Webhook | ✅ Event ingestion | Import submitted conversion events; CRM management is not implemented. |
 | VK Ads via Click.ru | 🟡 Manual step required | Read-only broker connected; initial VK account linking is required. |
+| Avito Ads | 🟡 Module path ready | Official Avito Ads API through a local read-only MCP allowlist. |
 | Apple Search Ads | 🟡 Connection template | External MCP read path configured; no local SQLite import yet. |
 | TikTok Ads | 🟡 Module path ready | Local read-only MCP for the TikTok Business API; 35 read tools, writes disabled. |
 | Reddit Ads | 🟡 Connection template | External MCP connection for campaigns and reports prepared, read-only. |

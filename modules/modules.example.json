@@ -23,6 +23,8 @@
         "metadata_get_resource_metadata"
       ],
       "capabilities": ["customers.read", "reports.read", "metadata.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "Pinned official googleads/google-ads-mcp v0.0.4 checkout. The server exposes read-only Google Ads tools; OAuth HTTP variables are intentionally not passed, and ads_google_ads_sync remains the normalized SQLite path."
     },
     {
@@ -47,6 +49,8 @@
       },
       "allow_tools": ["google_ads_agent_catalog", "google_ads_agent_call"],
       "capabilities": ["accounts.read", "campaigns.read", "reports.read", "keywords.read"],
+      "capability_tags": ["read", "write"],
+      "capability_tier": "read_write",
       "notes": "Runs the pinned google-ads-api-agent checkout through scripts/google-ads-api-agent-mcp.py. Only the adapter catalog and guarded call surface are exposed; provider mutations require confirm=true after explicit user approval."
     },
     {
@@ -82,6 +86,8 @@
         "get_statistics"
       ],
       "capabilities": ["campaigns.read", "reports.read", "reports.statistics"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "The template is read-only by default. Add explicit write tools to allow_tools only after guardrails are ready."
     },
     {
@@ -138,6 +144,8 @@
         "metrika.read",
         "webmaster.read"
       ],
+      "capability_tags": ["read", "write", "campaign_create"],
+      "capability_tier": "read_write_campaign_create",
       "notes": "ZAI.ONE yandex-mcp v0.3.0 from modules/yandex-direct, started over stdio by scripts/yandex-direct-mcp.py with the isolated modules/yandex-direct-deps tree. The launcher maps ADS_YANDEX_* settings from the ignored AdsMCP .env; ADS_YANDEX_DIRECT_WRITE_ENABLED controls the provider Direct write runtime, while Metrika, Webmaster and paid Wordstat writes stay off. The raw direct_write tool is allowlisted only for the internal guarded ads_yandex_direct_write path, which requires confirm=true, idempotency_key and provider readback."
     },
     {
@@ -162,6 +170,8 @@
         "check_ad_post"
       ],
       "capabilities": ["accounts.read", "accounts.context_switch", "ads.read", "stats.read", "targeting.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "ZAI module uses one local Streamable HTTP process and the logged-in ads.telegram.org HTTP session; it does not start Chromium. Start scripts/start-telegram-ads-mcp.ps1 once; it loads the session from ADS_MCP_DATA/secrets/telegram-ads-session.env. Strict mode and the dedicated AdsMCP account workflow keep provider writes disabled."
     },
     {
@@ -184,6 +194,8 @@
         "vk_ads_ad_groups_get"
       ],
       "capabilities": ["accounts.read", "campaigns.read", "reports.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "The URL placeholder ADS_CLICKRU_API_TOKEN is resolved from local clickru-settings.json by AdsMCP. The broker obtains/refreshes VK access through Click.ru; provider write tools stay outside the allowlist until a separate approval gate exists."
     },
     {
@@ -203,6 +215,8 @@
         "get_audience_associations"
       ],
       "capabilities": ["campaigns.read", "reports.read", "keywords.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "Official remote Microsoft Advertising MCP. The local Microsoft profile page handles PKCE OAuth and refreshes tokens locally; writes stay outside the allowlist."
     },
     {
@@ -263,6 +277,8 @@
         "product_page_reasons_get"
       ],
       "capabilities": ["apps.read", "campaigns.read", "reports.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "Apple Search Ads / Apple Ads API module. Keep create/update/delete tools outside allow_tools until approval gates are implemented."
     },
     {
@@ -323,6 +339,8 @@
         "tiktok_get_write_context"
       ],
       "capabilities": ["accounts.read", "campaigns.read", "ad_groups.read", "ads.read", "creatives.read", "audiences.read", "targeting.read", "metrics.read", "reports.read", "pixels.read", "catalogs.read", "events.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "Pinned local TikTok Business API MCP v2.0.1. TIKTOK_ENABLE_WRITES=0 prevents all 29 write tools from registering; AdsMCP allowlist contains only the package's 35 read tools."
     },
     {
@@ -353,6 +371,8 @@
         "report_daily"
       ],
       "capabilities": ["accounts.read", "campaigns.read", "reports.read"],
+      "capability_tags": ["read"],
+      "capability_tier": "read_only",
       "notes": "Reddit Ads API v3 module. OAuth refresh token is kept in env; management and creative tools stay disabled by the read-only allowlist."
     }
   ]

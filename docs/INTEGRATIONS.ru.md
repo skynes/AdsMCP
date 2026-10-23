@@ -12,7 +12,7 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 могут потребоваться рекламный кабинет, авторизация OAuth, токены и установка
 внешнего модуля.
 
-Последняя проверка: **2026-10-08**.
+Последняя проверка: **2026-10-23**.
 
 | Провайдер | Статус | Текущий путь интеграции | Запись |
 | --- | --- | --- | --- |
@@ -23,6 +23,7 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 | Mastodon / fediverse account | ✅ Guarded local account layer | OAuth 2 + PKCE для выбранного инстанса; локальное состояние в `ADS_MCP_DATA/mastodon-accounts.json` | Mention reads, единичные ответы и профиль после `confirm=true` |
 | Microsoft Advertising / Bing | ✅ Интегрирован | Официальный remote MCP и локальный normalization adapter | Только чтение |
 | VK Ads через Click.ru | 🟡 Ручной блокер | Click.ru broker работает read-only; привязка VK требует ручного шага | Только чтение |
+| Avito Ads | 🟡 Готов модульный путь | A1-x-tech MCP напрямую подключает официальный Avito Ads API; allowlist read-only | Только чтение |
 | Apple Search Ads | 🟡 Готов модульный путь | Есть MCP manifest и read-only allowlist; локального sync-адаптера пока нет | Только чтение |
 | TikTok Ads | 🟡 Готов модульный путь | Локальный MCP напрямую подключает TikTok Business API; 35 read tools, writes выключены | Только чтение |
 | Reddit Ads | 🟡 Готов модульный путь | Есть MCP manifest и reporting-путь | Только чтение |
@@ -31,6 +32,42 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 | Spotify Ads | 📋 Планируется | Кандидатный adapter path для аудио- и video-кампаний Spotify; API и reporting-путь ещё не включены | Не включено |
 | X Ads | 📋 Планируется | Кандидатный adapter path для кампаний X; доступ к текущему API и eligibility кабинета требуют проверки | Не включено |
 | CRM / Webhook | ✅ Источник конверсий | Локальный ingest конверсий и generic server-side events | Только ingest |
+
+## Теги capability и связь с матрицей оценки
+
+Теги разделены на два слоя. **Runtime tag** показывает, что реально открыто в
+AdsMCP сейчас, включая локальный `allow_tools`. **Matrix tag** показывает
+потенциал лучшего проверенного API/MCP-кандидата из исследовательской матрицы.
+Поэтому, например, TikTok имеет `read` в runtime, но `read + write +
+campaign_create` в matrix: выбранный локальный модуль намеренно работает
+read-only.
+
+Под `campaign_create` понимается создание рекламной кампании. Создание самого
+рекламного кабинета вынесено в отдельный `account_create`; `payment` означает
+платёжный capability матрицы, а не просто чтение баланса или изменение
+бюджета. Для Telegram оплата отмечена как partial: TON/KYC требуют внешнего
+шага и не считаются полностью автоматизированными в AdsMCP.
+
+| Провайдер | Runtime tag | Matrix tag | A/B/C/D/Σ | Почему отличается |
+| --- | --- | --- | ---: | --- |
+| Google Ads | `read + write` | `read + write + campaign_create` | `0/28/5/18/56` | Agent writes guarded; создание кампании не входит в открытый local surface |
+| Yandex Direct | `read + write + campaign_create` | `read + write + campaign_create` | `0/30/5/17/57` | Есть отдельный create-tool с показами off |
+| Telegram Ads | `read + write + campaign_create` | `read + write + campaign_create + account_create + payment` | `5/22/12/13/52` | Создание и budget writes guarded; payment в матрице только partial |
+| VK Ads через Click.ru | `read` | `read + write + campaign_create` | `0/24/5/14/48` | Выбранный broker read-only; score относится к прямому MCP-кандидату |
+| Avito Ads | `read` | `read + write + campaign_create` | `0/22/5/14/41` | Create, bid, budget и money-transfer tools закрыты allowlist |
+| Microsoft Advertising / Bing | `read` | `read` | `0/0/5/15/25` | Official pilot подключён как read-only |
+| Meta Ads | `read` | `read + write + campaign_create` | `0/28/5/15/52` | Graph runtime ещё не включён; модульный путь read-only |
+| X Ads | `read` | `read + write + campaign_create` | `0/20/5/14/39` | Локальный модуль пишет только после отдельного write-решения |
+| Spotify Ads | `read` | `read` | `—` | Проверенного campaign-write API в текущей матрице нет |
+| Apple Search Ads | `read` | `read + write + campaign_create` | `0/24/5/14/48` | Provider candidates имеют preview/approve writes, наш allowlist read-only |
+| TikTok Ads | `read` | `read + write + campaign_create` | `0/30/5/15/55` | Пакет запускается с `TIKTOK_ENABLE_WRITES=0`, writes не allowlisted |
+| Reddit Ads | `read` | `read + write + campaign_create` | `0/22/5/16/48` | Community CRUD-кандидаты не открыты в выбранном модуле |
+
+Уровень `read + write + campaign_create + payment` сейчас не является
+полностью подтверждённым runtime-уровнем ни для одной подключённой сети.
+Telegram — ближайший кандидат по матрице, но его payment capability остаётся
+частичным. Исходные баллы A/B/C/D сохранены в
+[research/research-matrix.md](../research/research-matrix.md).
 
 Причины выбора модулей и альтернативы описаны в [обзоре провайдеров](./PROVIDER-MODULES.md),
 а ограничения VK через брокера — в [статусе Click.ru](./CLICK-RU-STATUS.md).

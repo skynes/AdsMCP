@@ -7,6 +7,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { getClickruToken } from "../clickru-settings.js";
 import { loadEnv } from "../env.js";
 import { getMicrosoftAdsAccessToken } from "../microsoft-ads-settings.js";
+import { getCapabilityProfile } from "./capability-profile.js";
+import type { CapabilityMatrixScores, CapabilityTag, CapabilityTier } from "./capability-profile.js";
 
 type ModuleTransport = "stdio" | "streamable_http";
 
@@ -25,6 +27,12 @@ export interface AdsMcpModuleConfig {
   inherit_env?: string[];
   allow_tools?: string[];
   capabilities?: string[];
+  capability_tags?: CapabilityTag[];
+  capability_tier?: CapabilityTier;
+  matrix_capability_tags?: CapabilityTag[];
+  matrix_capability_tier?: CapabilityTier;
+  matrix_scores?: CapabilityMatrixScores;
+  matrix_note?: string;
   notes?: string;
   source_url?: string;
   source_ref?: string;
@@ -48,6 +56,12 @@ export interface AdsMcpModuleSummary {
   url?: string;
   allowTools?: string[];
   capabilities: string[];
+  capabilityTags: CapabilityTag[];
+  capabilityTier: CapabilityTier;
+  matrixCapabilityTags: CapabilityTag[];
+  matrixCapabilityTier: CapabilityTier;
+  matrixScores?: CapabilityMatrixScores;
+  matrixNote?: string;
   notes?: string;
   sourceUrl?: string;
   sourceRef?: string;
@@ -145,6 +159,16 @@ function summary(module: AdsMcpModuleConfig, error?: string): AdsMcpModuleSummar
   const enabled = module.enabled !== false;
   const commandReady = module.transport === "stdio" && isNonEmpty(module.command);
   const urlReady = module.transport === "streamable_http" && isNonEmpty(module.url);
+  const capabilityProfile = getCapabilityProfile(module.provider);
+  const moduleCapabilityProfile = {
+    ...capabilityProfile,
+    ...(module.capability_tags ? { capabilityTags: [...module.capability_tags] } : {}),
+    ...(module.capability_tier ? { capabilityTier: module.capability_tier } : {}),
+    ...(module.matrix_capability_tags ? { matrixCapabilityTags: [...module.matrix_capability_tags] } : {}),
+    ...(module.matrix_capability_tier ? { matrixCapabilityTier: module.matrix_capability_tier } : {}),
+    ...(module.matrix_scores ? { matrixScores: { ...module.matrix_scores } } : {}),
+    ...(module.matrix_note ? { matrixNote: module.matrix_note } : {}),
+  };
   return {
     id: module.id,
     provider: module.provider,
@@ -157,6 +181,7 @@ function summary(module: AdsMcpModuleConfig, error?: string): AdsMcpModuleSummar
     url: module.url,
     allowTools: module.allow_tools,
     capabilities: module.capabilities || [],
+    ...moduleCapabilityProfile,
     notes: module.notes,
     sourceUrl: module.source_url,
     sourceRef: module.source_ref,
