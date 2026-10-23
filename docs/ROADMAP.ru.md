@@ -140,7 +140,7 @@ read-only пути остаются safety baseline, пока строятся w
 | VK Ads через Click.ru | Read-only broker; ручная привязка VK ещё блокирует | Закрыть account onboarding blocker до рассмотрения write |
 | Apple, TikTok, Reddit | Module-ready read paths | Добавить нормализованный sync и создание после проверки стабильности модулей |
 | Meta Ads | Планируемый adapter path | Определить безопасный Graph API/MCP runtime и модель onboarding кабинета |
-| OpenAI Ads / ChatGPT | Планируемый кандидат | Проверить продуктовую поверхность, модель кабинета, API, targeting и policy boundary до проектирования адаптера |
+| OpenAI Ads / ChatGPT | Готов read-only модульный путь | Официальный Advertiser API bridge реализован; guarded writes добавлять отдельным решением после подтверждения, idempotency и readback |
 | Spotify Ads | Планируемый кандидат | Проверить региональную доступность, campaign API, audio/video creative workflow и reporting model |
 | X Ads | Планируемый кандидат | Проверить текущий Ads API, eligibility кабинета, targeting и права guarded campaign management |
 

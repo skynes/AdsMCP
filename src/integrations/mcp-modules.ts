@@ -230,7 +230,7 @@ async function withModuleClient<T>(
   module: AdsMcpModuleConfig,
   action: (client: Client) => Promise<T>,
 ): Promise<T> {
-  const client = new Client({ name: "ads-mcp-module-bridge", version: "1.1.0" }, { capabilities: {} });
+  const client = new Client({ name: "ads-mcp-module-bridge", version: "1.1.1" }, { capabilities: {} });
   let transport: StdioClientTransport | StreamableHTTPClientTransport;
   if (module.transport === "stdio") {
     transport = new StdioClientTransport({

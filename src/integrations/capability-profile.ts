@@ -70,7 +70,13 @@ const PROFILES: Record<string, CapabilityProfile> = {
     matrixScores: { a: 0, b: 28, c: 5, d: 15, total: 52 },
     matrixNote: "Provider/MCP potential; AdsMCP Graph runtime is not enabled.",
   },
-  openai_ads: READ_ONLY,
+  openai_ads: {
+    capabilityTags: ["read"],
+    capabilityTier: "read_only",
+    matrixCapabilityTags: ["read", "write", "campaign_create"],
+    matrixCapabilityTier: "read_write_campaign_create",
+    matrixNote: "The official Advertiser API documents campaign/ad group/ad creation and updates; the selected local bridge intentionally exposes only GET/read tools.",
+  },
   spotify_ads: READ_ONLY,
   x_ads: {
     capabilityTags: ["read"],

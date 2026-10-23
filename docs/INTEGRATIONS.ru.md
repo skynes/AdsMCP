@@ -23,15 +23,15 @@ MCP-модуль — [руководство пользователя](./USAGE.r
 | Mastodon / fediverse account | ✅ Guarded local account layer | OAuth 2 + PKCE для выбранного инстанса; локальное состояние в `ADS_MCP_DATA/mastodon-accounts.json` | Mention reads, единичные ответы и профиль после `confirm=true` |
 | Microsoft Advertising / Bing | ✅ Интегрирован | Официальный remote MCP и локальный normalization adapter | Только чтение |
 | Avito Ads | ✅ Интегрирован · read-only | `A1-x-tech/mcp-avito-ads` v1.1.0 через локальный stdio; официальный Avito Ads API | Только чтение; writes, money transfer и raw API закрыты allowlist |
-| VK Ads через Click.ru | 🟡 Ручной блокер | Click.ru broker работает read-only; привязка VK требует ручного шага | Только чтение |
-| Apple Search Ads | 🟡 Готов модульный путь | Локальный MCP для Apple Ads Platform API v1; 57 read tools, writes выключены | Только чтение |
-| TikTok Ads | 🟡 Готов модульный путь | Есть MCP manifest и OAuth-путь настройки | Только чтение |
+| VK Ads через Click.ru | ✅ Интегрирован · нужен ручной шаг | Click.ru broker работает read-only; привязка VK требует ручного шага | Только чтение |
+| Apple Search Ads | ✅ Интегрирован · read-only | Локальный MCP для Apple Ads Platform API v1; 57 read tools, writes выключены | Только чтение |
+| TikTok Ads | ✅ Интегрирован · read-only | Есть MCP manifest и OAuth-путь настройки | Только чтение |
 | Reddit Ads | ✅ Интегрирован · read-only | `camlowe/mcp-server-reddit-ads` v0.5.5 через локальный stdio; официальный Reddit Ads API v3 | Только чтение; write tier и provider write-tools закрыты |
-| Meta Ads | 🟡 Готов модульный путь | Локальный MCP напрямую подключает Meta Graph/Marketing API; 41 read tool, writes выключены | Только чтение |
-| Email / SMTP + IMAP | 🟡 Готов модульный путь | `@codefuturist/email-mcp@0.6.0` через stdio; IMAP для чтения и SMTP для отправки | Чтение + отправка/ответ/пересылка/черновики; destructive и bulk tools закрыты |
-| OpenAI Ads / ChatGPT | 📋 Планируется | Кандидатный adapter path для рекламной поверхности OpenAI и ChatGPT; API и модель кабинета ещё не подтверждены | Не включено |
-| X Ads | 🟡 Готов модульный путь | Локальный read-only MCP поверх официального X Ads API; официальный remote MCP требует OAuth2/PKCE, которого пока нет в текущем bridge | Только чтение |
-| Spotify Ads | 🟡 Готов модульный путь | Локальный Adport MCP напрямую подключает официальный Spotify Ads API; writes остаются за allowlist | Только чтение |
+| Meta Ads | ✅ Интегрирован · read-only | Локальный MCP напрямую подключает Meta Graph/Marketing API; 41 read tool, writes выключены | Только чтение |
+| Email / SMTP + IMAP | ✅ Интегрирован · чтение и запись | `@codefuturist/email-mcp@0.6.0` через stdio; IMAP для чтения и SMTP для отправки | Чтение + отправка/ответ/пересылка/черновики; destructive и bulk tools закрыты |
+| OpenAI Ads / ChatGPT | ✅ Интегрирован · read-only | Локальный MCP bridge поверх официального OpenAI Ads Advertiser API; кабинет, кампании, объявления, insights, audiences и audit logs | Только чтение; writes, uploads, billing и payment закрыты |
+| X Ads | ✅ Интегрирован · read-only | Локальный read-only MCP поверх официального X Ads API; официальный remote MCP требует OAuth2/PKCE, которого пока нет в текущем bridge | Только чтение |
+| Spotify Ads | ✅ Интегрирован · read-only | Локальный Adport MCP напрямую подключает официальный Spotify Ads API; writes остаются за allowlist | Только чтение |
 | CRM / Webhook | ✅ Источник конверсий | Локальный ingest конверсий и generic server-side events | Только ingest |
 
 ## Теги capability и связь с матрицей оценки
@@ -64,6 +64,7 @@ read-only.
 | TikTok Ads | `read` | `read + write + campaign_create` | `0/30/5/15/55` | Пакет запускается с `TIKTOK_ENABLE_WRITES=0`, writes не allowlisted |
 | Reddit Ads | `read` | `read + write + campaign_create` | `0/22/5/16/48` | Community CRUD-кандидаты не открыты в выбранном модуле |
 | Email / SMTP + IMAP | `read + write` | `read + write` | `—` | SMTP отправка и IMAP чтение нужны по задаче; удаление, bulk и mailbox management не открыты |
+| OpenAI Ads / ChatGPT | `read` | `read + write + campaign_create` | `—` | Официальный Advertiser API имеет mutation endpoints; выбранный bridge оставляет только GET/read |
 
 Уровень `read + write + campaign_create + payment` сейчас не является
 полностью подтверждённым runtime-уровнем ни для одной подключённой сети.

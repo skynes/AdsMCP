@@ -637,6 +637,36 @@ clipboard и calendar tools закрыты. `MCP_EMAIL_READ_ONLY=true` допо�
 отключает mailbox writes внутри внешнего пакета. Полное решение и настройка — в
 [ADR 0016](./decisions/0016-email-smtp-imap-mcp.md).
 
+## OpenAI Ads / ChatGPT: официальный Advertiser API и локальный read-only bridge
+
+Дата проверки: **2026-10-23**. OpenAI публикует официальный [Ads API](https://developers.openai.com/ads/api-overview) для ad accounts, campaigns, ad groups, ads, product feeds, conversion tracking и reporting. Авторизация выполняется Bearer-ключом, scoped to one ad account, через base URL `https://api.ads.openai.com/v1`.
+
+| Кандидат | Что полезно | Ограничение | Решение |
+| --- | --- | --- | --- |
+| [Official OpenAI Ads Advertiser API](https://developers.openai.com/ads/openapi.json) | first-party REST/OpenAPI contract, account hierarchy, campaigns/ad groups/ads, insights, audiences, audit logs и product feeds | API доступен по ключу рекламного аккаунта; mutation endpoints требуют отдельного safety-контура | выбранный API baseline |
+| [Advertise in ChatGPT / Ads Manager](https://ads.openai.com/) | first-party UI для создания и управления рекламой в ChatGPT | UI не является локальным MCP transport и не даёт нам allowlist-контроль | reference и ручной fallback |
+| Community MCP wrappers | могут ускорить подключение отдельных API calls | не являются официальным OpenAI runtime, могут раскрывать широкую write-поверхность и добавлять hosted dependency | не подключать как core |
+
+В runtime выбран небольшой локальный `openai_ads_official` stdio-модуль. Он
+использует `dist/openai-ads-mcp.js`, передаёт в дочерний процесс только
+`OPENAI_ADS_API_KEY` и `OPENAI_ADS_BASE_URL`, а в allowlist включает только
+GET/read tools: ad account, campaigns, ad groups, ads, insights, custom
+audiences, audit logs и product feeds. API key не попадает в MCP arguments,
+SQLite или ответы dashboard.
+
+Минимальная настройка в игнорируемом `.env`:
+
+```dotenv
+OPENAI_ADS_API_KEY=...
+OPENAI_ADS_BASE_URL=https://api.ads.openai.com/v1
+```
+
+После копирования `modules/modules.example.json` в локальный
+`modules/modules.json` модуль появится в dashboard; там можно сохранить ключ
+для module id `openai_ads_official` и проверить состояние credentials. Создание,
+обновление, активация/пауза, загрузки, billing и payment намеренно не включены.
+Полное решение зафиксировано в [ADR 0017](./decisions/0017-openai-ads-mcp.md).
+
 ## Как заменить модуль позже
 
 Новый кандидат не должен требовать переписывания всей системы. Нужно проверить:

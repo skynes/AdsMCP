@@ -13,7 +13,7 @@ compare results, and spend less time on routine work.
 Our goal is to make advertising simple: from audience research to launch and
 optimization through a familiar chat, with you in control.
 
-> Release `1.1.0`: the local core and modular integrations are available; each
+> Release `1.1.1`: the local core and modular integrations are available; each
 > provider exposes its own capability and safety boundaries.
 > The full advertising lifecycle through an agent is on the roadmap.
 
@@ -31,7 +31,7 @@ optimization through a familiar chat, with you in control.
 The MCP server is enough to get started locally. Add integrations as you need
 them; advertising accounts and access are configured separately.
 
-## Integrations: available and planned
+## Integrations: available
 
 Status describes project capabilities after accounts and modules are configured.
 Changes on external platforms require explicit confirmation.
@@ -46,16 +46,46 @@ Changes on external platforms require explicit confirmation.
 | Discord | ✅ Bot connector | Search and posting in permitted channels on authorized servers. |
 | Mastodon | ✅ Account and conversations | OAuth, mention reads, replies, and profile updates. |
 | CRM / Webhook | ✅ Event ingestion | Import submitted conversion events; CRM management is not implemented. |
-| VK Ads via Click.ru | 🟡 Manual step required | Read-only broker connected; initial VK account linking is required. |
-| Avito Ads | 🟡 Module path ready | Official Avito Ads API through a local read-only MCP allowlist. |
-| Apple Search Ads | 🟡 Module path ready | Local read-only MCP for Apple Ads Platform API v1; 57 read tools, writes disabled. |
-| TikTok Ads | 🟡 Module path ready | Local read-only MCP for the TikTok Business API; 35 read tools, writes disabled. |
-| Reddit Ads | 🟡 Module path ready | Local read-only MCP for the official Reddit Ads API v3; write tier is disabled. |
-| Email / SMTP + IMAP | 🟡 Module path ready | IMAP checks and SMTP sending via a restricted allowlist; destructive mailbox tools stay disabled. |
-| Meta Ads | 🟡 Module path ready | Local read-only MCP for the official Meta Graph/Marketing API; 41 read tools, writes disabled. |
-| OpenAI Ads / ChatGPT | 📋 Candidate | API availability and the advertising account model need verification. |
-| Spotify Ads | 🟡 Module path ready | Local Adport MCP connects directly to the official Spotify Ads API; writes stay outside the allowlist. |
-| X Ads | 🟡 Module path ready | Local read-only MCP connects directly to the official X Ads API; OAuth refresh remains external. |
+| VK Ads via Click.ru | ✅ Integrated · manual step | Read-only broker connected; initial VK account linking is required. |
+| Avito Ads | ✅ Integrated · read-only | Official Avito Ads API through a local read-only MCP allowlist. |
+| Apple Search Ads | ✅ Integrated · read-only | Local read-only MCP for Apple Ads Platform API v1; 57 read tools, writes disabled. |
+| TikTok Ads | ✅ Integrated · read-only | Local read-only MCP for the TikTok Business API; 35 read tools, writes disabled. |
+| Reddit Ads | ✅ Integrated · read-only | Local read-only MCP for the official Reddit Ads API v3; write tier is disabled. |
+| Email / SMTP + IMAP | ✅ Integrated · read/write | IMAP checks and SMTP sending via a restricted allowlist; destructive mailbox tools stay disabled. |
+| Meta Ads | ✅ Integrated · read-only | Local read-only MCP for the official Meta Graph/Marketing API; 41 read tools, writes disabled. |
+| OpenAI Ads / ChatGPT | ✅ Integrated · read-only | Official OpenAI Ads Advertiser API through a local MCP bridge; account, campaign, ad, insight, audience and audit reads are enabled. |
+| Spotify Ads | ✅ Integrated · read-only | Local Adport MCP connects directly to the official Spotify Ads API; writes stay outside the allowlist. |
+| X Ads | ✅ Integrated · read-only | Local read-only MCP connects directly to the official X Ads API; OAuth refresh remains external. |
+
+## Capability matrix
+
+The five capability columns describe what AdsMCP exposes now after the selected
+module is configured. `API/MCP potential` records the broader verified provider
+surface from the research matrix; it does not open those operations in runtime.
+`Campaign create` means creating an advertising campaign, while `Account
+create` means creating the advertising account itself. `Payment` means funding
+or paying the advertising account, not reading a balance or changing a budget.
+
+| Integration | Read now | Write now | Campaign create now | Account create now | Payment now | API/MCP potential |
+| --- | --- | --- | --- | --- | --- | --- |
+| Google Ads | ✅ | ✅ | — | — | — | read + write + campaign_create |
+| Yandex Direct | ✅ | ✅ | ✅ | — | — | read + write + campaign_create |
+| Telegram Ads | ✅ | ✅ | ✅ | — | — | read + write + campaign_create + account_create + payment* |
+| Microsoft Advertising / Bing | ✅ | — | — | — | — | read |
+| VK Ads via Click.ru | ✅ | — | — | — | — | read + write + campaign_create |
+| Avito Ads | ✅ | — | — | — | — | read + write + campaign_create |
+| Apple Search Ads | ✅ | — | — | — | — | read + write + campaign_create |
+| TikTok Ads | ✅ | — | — | — | — | read + write + campaign_create |
+| Reddit Ads | ✅ | — | — | — | — | read + write + campaign_create |
+| Meta Ads | ✅ | — | — | — | — | read + write + campaign_create |
+| OpenAI Ads / ChatGPT | ✅ | — | — | — | — | read + write + campaign_create |
+| Spotify Ads | ✅ | — | — | — | — | read |
+| X Ads | ✅ | — | — | — | — | read + write + campaign_create |
+| Email / SMTP + IMAP | ✅ | ✅ | — | — | — | read + write |
+
+\* Telegram payment remains partial: funding/KYC still require an external
+step. A green integration status means the selected read/write surface is
+implemented; it does not mean every provider capability is enabled.
 
 See the [integration guide (Russian)](./docs/INTEGRATIONS.ru.md) for details
 and the [roadmap](./docs/ROADMAP.md) for next steps.

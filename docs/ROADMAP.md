@@ -146,7 +146,7 @@ read-only paths remain the safety baseline while creation workflows are built.
 | VK Ads via Click.ru | Read-only broker path; manual VK binding remains | Resolve account onboarding blocker before considering writes |
 | Apple, TikTok, Reddit | Module-ready read paths | Add normalized sync and provider-specific creation only after stable module validation |
 | Meta Ads | Planned adapter path | Define a safe Graph API/MCP runtime and account onboarding model |
-| OpenAI Ads / ChatGPT | Planned candidate | Verify the product surface, account model, API access, targeting and policy boundary before designing an adapter |
+| OpenAI Ads / ChatGPT | Read-only module path ready | Official Advertiser API bridge is implemented; add a separately approved guarded write workflow only after confirmation, idempotency and provider readback are designed |
 | Spotify Ads | Planned candidate | Verify regional availability, campaign API, audio/video creative workflow and reporting model |
 | X Ads | Planned candidate | Verify current ads API access, account eligibility, targeting and guarded campaign-management permissions |
 

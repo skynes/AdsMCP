@@ -130,7 +130,7 @@ enterprise 功能单独授权，因此在重新分发修改后的构建之前必
 | VK Ads through Click.ru | 只读 broker 路径；VK 绑定仍需手动操作 | 先解决 account onboarding blocker，再考虑写入 |
 | Apple、TikTok、Reddit | Module-ready 读取路径 | 模块稳定后增加标准化同步和平台创建能力 |
 | Meta Ads | 计划中的 adapter 路径 | 定义安全的 Graph API/MCP runtime 和账户 onboarding 模型 |
-| OpenAI Ads / ChatGPT | 计划中的候选 | 在设计 adapter 前确认产品形态、账户模型、API、targeting 和 policy boundary |
+| OpenAI Ads / ChatGPT | 只读模块路径已就绪 | 已实现官方 Advertiser API bridge；guarded writes 需在确认、幂等和 provider readback 方案完成后单独决定 |
 | Spotify Ads | 计划中的候选 | 确认区域可用性、campaign API、音频/视频 creative workflow 和 reporting model |
 | X Ads | 计划中的候选 | 确认当前 Ads API、账户资格、targeting 和受控 campaign-management 权限 |
 

@@ -127,6 +127,13 @@ provider write-инструменты и не отправляет письма/
 пользователя. Список разрешений и альтернативы собраны в
 [решении по Email MCP](./decisions/0016-email-smtp-imap-mcp.md).
 
+Для OpenAI Ads / ChatGPT скопируйте `modules/modules.example.json` в локальный
+`modules/modules.json`, добавьте в dashboard секрет `OPENAI_ADS_API_KEY` для
+`openai_ads_official` и выполните проверку runtime. Модуль подключается к
+официальному Advertiser API и разрешает только чтение кабинета, структуры,
+insights, audiences, audit logs и product feeds; создание и изменение рекламы
+пока не подключены. Подробности и альтернативы — в [ADR 0017](./decisions/0017-openai-ads-mcp.md).
+
 Атрибуция поддерживает модели `first_touch`, `last_touch`, `linear` и
 `position_based`. О связях между проектами, кампаниями и событиями см.
 [карту базы данных](./DATA-MODEL.ru.md).

@@ -1,6 +1,6 @@
 {
   "name": "@skynes/ads-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Local MCP server for advertising campaign operations, conversion analytics and automation.",
   "type": "module",
   "main": "dist/index.js",
@@ -39,6 +39,7 @@
     "check:publication": "node scripts/check-publication.mjs --history",
     "smoke": "npm run build && node scripts/smoke.mjs && node scripts/smoke-free-use.mjs && node scripts/smoke-settings.mjs",
     "smoke:free-use": "npm run build:mcp && node scripts/smoke-free-use.mjs",
+    "smoke:openai-ads": "npm run build:mcp && node scripts/smoke-openai-ads.mjs",
     "smoke:dstore": "npm run build:mcp && node scripts/smoke-dstore.mjs",
     "smoke:aiki": "npm run build:mcp && node scripts/smoke-aiki.mjs",
     "smoke:weekly-contribution": "npm run build:mcp && node scripts/smoke-weekly-contribution.mjs",
